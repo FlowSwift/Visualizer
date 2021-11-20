@@ -16,6 +16,16 @@ clock.tick(FPS)
 BACKGROUND = "black"
 ARRAY_BOTTOM = 700
 ARRAY_LENGTH = 20
+
+numbers = [random.randrange(300,600) for i in range(ARRAY_LENGTH)]
+start_pos = 200 # starting position of the array
+bars_gap = 8
+delay = 500
+
+bars_c = "red"
+bars_compared_c = "blue"
+bars_swapped_c = "green"
+
 def check_events():
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -39,9 +49,9 @@ def draw_array(numbers, start_pos, bars_gap, current_left_main=0, check=False, s
         if current_left == current_left_main:  # check if drawing the same bar the function was called for
             # if swapping values, make thee pair green
             if swapped:
-                color = "green"
+                color = bars_swapped_c
             else:
-                color = "blue"
+                color = bars_compared_c
             pygame.draw.line(WINDOW, color, (current_pos,ARRAY_BOTTOM), (current_pos,numbers[current_left_main]), 3)
             pygame.draw.line(WINDOW, color, (current_pos+bars_gap,ARRAY_BOTTOM), (current_pos+bars_gap,numbers[current_left_main+1]), 3)
 
@@ -51,16 +61,11 @@ def draw_array(numbers, start_pos, bars_gap, current_left_main=0, check=False, s
             skip = False
             continue
         else: # make the rest of the bars red
-            color = "red" 
+            color = bars_c
             pygame.draw.line(WINDOW, color, (current_pos,ARRAY_BOTTOM), (current_pos,numbers[current_left]), 3)
     pygame.display.update()
 
 def main():
-    numbers = [random.randrange(300,600) for i in range(ARRAY_LENGTH)]
-    # numbers = [300, 350, 300, 300, 350, 300]
-    start_pos = 200 # starting position of the array
-    bars_gap = 8
-    delay = 500
     run = True
     while run:
         check_events()
