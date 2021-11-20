@@ -29,30 +29,38 @@ def animate_delay(delay=1000):
         pass
 
  #  replace array with new array
-def draw_array(numbers, start_pos, bars_gap):
+def draw_array(numbers, start_pos, bars_gap, current_left_main=0, check=False, swapped=False):
     global ARRAY_BOTTOM  # starting height of bars
     WINDOW.fill(BACKGROUND)  # background
     current_pos = start_pos - bars_gap  # bar position
+    skip = False
     for current_left in range(len(numbers)): 
         current_pos += bars_gap  # shift to next bar
-        color = "red" 
-        pygame.draw.line(WINDOW, color, (current_pos,ARRAY_BOTTOM), (current_pos,numbers[current_left]), 3)
-    pygame.display.update()
+        if current_left == current_left_main:  # check if drawing the same bar the function was called for
+            # if swapping values, make thee pair green
+            if swapped:
+                color = "green"
+            else:
+                color = "blue"
+            pygame.draw.line(WINDOW, color, (current_pos,ARRAY_BOTTOM), (current_pos,numbers[current_left_main]), 3)
+            pygame.draw.line(WINDOW, color, (current_pos+bars_gap,ARRAY_BOTTOM), (current_pos+bars_gap,numbers[current_left_main+1]), 3)
 
-def draw_pair(pair, left_pos, right_pos, color):
-    pygame.draw.line(WINDOW, BACKGROUND, (left_pos, ARRAY_BOTTOM), (left_pos,0), 3)
-    pygame.draw.line(WINDOW, BACKGROUND, (right_pos, ARRAY_BOTTOM), (right_pos,0), 3)
-    pygame.draw.line(WINDOW, color, (left_pos, ARRAY_BOTTOM), (left_pos, pair[0]), 3)
-    pygame.draw.line(WINDOW, color, (right_pos, ARRAY_BOTTOM), (right_pos, pair[1]), 3)
+            skip = True #skip next pair to not overide color current right bar color
+            continue
+        elif skip == True:
+            skip = False
+            continue
+        else: # make the rest of the bars red
+            color = "red" 
+            pygame.draw.line(WINDOW, color, (current_pos,ARRAY_BOTTOM), (current_pos,numbers[current_left]), 3)
     pygame.display.update()
-    
 
 def main():
     numbers = [random.randrange(300,600) for i in range(ARRAY_LENGTH)]
     # numbers = [300, 350, 300, 300, 350, 300]
     start_pos = 200 # starting position of the array
     bars_gap = 8
-    delay = 50
+    delay = 500
     run = True
     while run:
         check_events()
@@ -62,22 +70,20 @@ def main():
             swapped = False
             for i in range(len(numbers)-1-n):
                 check_events()  # check for quitting
-                draw_array(numbers, start_pos, bars_gap)
-                animate_delay(int(delay/2))
-                left_pos, right_pos = start_pos + bars_gap*(i), start_pos + (bars_gap*(i)+bars_gap)
-                draw_pair(numbers[i:i+2], left_pos, right_pos, "blue")
-                animate_delay(int(delay))
-                if numbers[i+1] > numbers[i]:
+                draw_array(numbers, start_pos, bars_gap,i)  # draw the current array
+                animate_delay(int(delay/3))  # wait
+                if numbers[i+1] > numbers[i]:  # swap numbers if right bigger than left and animate
                     swapped = True
                     tmp = numbers[i]
                     numbers[i], numbers[i+1] = numbers[i+1], tmp
-                    draw_pair(numbers[i:i+2], left_pos, right_pos, "green")
-                    animate_delay(int(delay*2))
-            if swapped == False:
+                    draw_array (numbers, start_pos, bars_gap, i, True, swapped)
+                    pygame.display.update()
+                    animate_delay(int(delay/1.5))
+            if swapped == False:  # check if any swaps were done and if not, array is sorted
                 break
 
     pygame.quit()
     sys.exit()
 
 if __name__ == "__main__":
-    main()
+    main() 
