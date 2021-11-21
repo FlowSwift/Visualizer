@@ -2,10 +2,6 @@ import sys
 
 import random
 import pygame
-from pygame import draw
-from pygame import display
-from pygame import color
-from pygame.time import delay
 
  #  initilize pygame
 pygame.init()
@@ -17,9 +13,7 @@ BACKGROUND_IMG = BACKGROUND_SURF
 pygame.display.set_caption("Visualizer!")
 clock = pygame.time.Clock()
 FPS = 60
-clock.tick(FPS)
 
-BACKGROUND = "black"
 ARRAY_BOTTOM = 700
 ARRAY_LENGTH = 20
 NUMBERS = [random.randrange(300,600) for i in range(ARRAY_LENGTH)]
@@ -27,7 +21,7 @@ NUMBERS = [random.randrange(300,600) for i in range(ARRAY_LENGTH)]
 start_pos = 200 # left starting position of the array
 bars_gap = 8
 bars_width =  3
-DELAY = 150
+DELAY = 50
 bars_c = "red"
 bars_compared_c = "blue"
 bars_swapped_c = "green"
@@ -49,8 +43,8 @@ def animate_delay(delay=1000):
 def draw_array(numbers, start_pos, bars_gap, width = 3):
     current_pos = start_pos
     bars = []  # list of all the bars rectangles
+    color = bars_c
     for num in numbers:
-        color = bars_c
         bars.append(pygame.draw.line(WINDOW, color, (current_pos,ARRAY_BOTTOM), (current_pos,num), width))
         current_pos += bars_gap
     pygame.display.update()
@@ -99,6 +93,7 @@ def main():
     WINDOW.blit(BACKGROUND_IMG, (0, 0))  # background
     bars = []
     while True:
+        clock.tick(FPS)
         check_events()
         # bubble_sort
         for n in range(len(NUMBERS)):
@@ -119,6 +114,7 @@ def main():
                 draw_pair(bars[i:i+2], color=bars_c)  # recolor pair to orignal bar color
             if swapped == False:
                 break
+        return
 
 if __name__ == "__main__":
     main()

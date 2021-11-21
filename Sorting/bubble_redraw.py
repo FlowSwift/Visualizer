@@ -7,13 +7,12 @@ import pygame
 pygame.init()
 WIDTH, HEIGHT = 1366, 768
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
+BACKGROUND = "black"
 
 pygame.display.set_caption("Visualizer!")
 clock = pygame.time.Clock()
 FPS = 60
-clock.tick(FPS)
 
-BACKGROUND = "black"
 ARRAY_BOTTOM = 700
 ARRAY_LENGTH = 20
 
@@ -68,6 +67,7 @@ def draw_array(numbers, start_pos, bars_gap, current_left_main=0, check=False, s
 def main():
     run = True
     while run:
+        clock.tick(FPS)
         check_events()
 
         # bubble_sort
