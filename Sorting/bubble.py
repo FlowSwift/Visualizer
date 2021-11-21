@@ -43,8 +43,8 @@ def animate_delay(delay=1000):
 def draw_array(numbers, start_pos, bars_gap, width = 3):
     current_pos = start_pos
     bars = []  # list of all the bars rectangles
-    color = bars_c
     for num in numbers:
+        color = bars_c
         bars.append(pygame.draw.line(WINDOW, color, (current_pos,ARRAY_BOTTOM), (current_pos,num), width))
         current_pos += bars_gap
     pygame.display.update()
