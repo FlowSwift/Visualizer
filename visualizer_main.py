@@ -1,23 +1,26 @@
 from states.main_menu import MainMenu
 
+import config.config as config
+
 import os, time
 
 import pygame
 
+clock = pygame.time.Clock()
+pygame.init()
 
 class Visualizer():
+    font = pygame.font.Font(os.path.join(config.fonts_dir, "Game Of Squids.ttf"), 20)
     def __init__(self) -> None:
-        pygame.init()
-        self.CANVAS_W, self.CANVAS_H = 480, 270
-        self.SCREEN_WIDTH, self.SCREEN_HEIGHT = 1920, 1080
-        self.canvas = pygame.Surface((self.CANVAS_W, self.CANVAS_H))
-        self.WINDOW = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+        #self.CANVAS_W, self.CANVAS_H = config.SCREEN_WIDTH, config.SCREEN_HEIGHT
+        #self.canvas = pygame.Surface((self.CANVAS_W, self.CANVAS_H))
+        self.SCREEN_WIDTH, self.SCREEN_HEIGHT = config.SCREEN_WIDTH, config.SCREEN_HEIGHT
+        self.WINDOW = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.SCALED)
         self.running, self.playing = True, True
-        self.actions = {"space": False}
+        self.actions = {"space": False, "left_key": False, "right_key": False}
         self.dt, self.prev_time = 0, 0
         self.current_tick = 0
         self.state_stack = []
-        self.load_assets()
         self.load_states()
     
     def visualizer_loop(self):
@@ -29,22 +32,32 @@ class Visualizer():
 
     def check_events(self):
         for event in pygame.event.get():
+            if event.type == pygame.VIDEORESIZE:
+                self.SCREEN_WIDTH, self.SCREEN_HEIGHT = (event.size)
             if event.type == pygame.QUIT:
                 self.playing = False
                 self.running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     self.actions["space"] = True
+                if event.key == pygame.K_LEFT:
+                    self.actions["left_key"] = True
+                if event.key == pygame.K_RIGHT:
+                    self.actions["right_key"] = True
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_SPACE:
                     self.actions["space"] = False
+                if event.key == pygame.K_LEFT:
+                    self.actions["left_key"] = False
+                if event.key == pygame.K_RIGHT:
+                    self.actions["right_key"] = False
     
     def update(self):
         self.state_stack[-1].update(self.dt, self.actions)
 
     def render(self):
-        self.state_stack[-1].render(self.canvas)
-        self.WINDOW.blit(pygame.transform.scale(self.canvas, (self.SCREEN_WIDTH, self.SCREEN_HEIGHT)), (0,0))
+        self.state_stack[-1].render(self.WINDOW)
+        self.WINDOW.blit((self.WINDOW), (0,0))
         pygame.display.flip()
 
     def get_dt(self):
@@ -58,13 +71,6 @@ class Visualizer():
         text_rect = text_surface.get_rect()
         text_rect.center = (x,y)
         surface.blit(text_surface, text_rect)
-    
-    def load_assets(self):
-        self.assets_dir = os.path.join("assets")
-        self.graphics_dir = os.path.join(self.assets_dir, "graphics")
-        self.fonts_dir = os.path.join(self.assets_dir, "fonts")
-        self.font= pygame.font.Font(os.path.join(self.fonts_dir, "Game Of Squids.ttf"), 20)
-        
 
     def load_states(self):
         self.main_menu_screen = MainMenu(self)
