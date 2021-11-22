@@ -15,4 +15,4 @@ class MainMenu(State):
 
     def render(self, display):
         display.fill((255,255,255))
-        self.visualizer.draw_text(display, "Game States", (0,0,0), self.visualizer.CANVAS_W/2, self.visualizer.CANVAS_H/2)
+        self.visualizer.draw_text(display, "Game States", (0,0,0), self.visualizer.SCREEN_WIDTH/2, self.visualizer.SCREEN_HEIGHT/2)
