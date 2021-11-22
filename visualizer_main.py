@@ -71,6 +71,7 @@ class Visualizer():
         text_rect = text_surface.get_rect()
         text_rect.center = (x,y)
         surface.blit(text_surface, text_rect)
+        return text_rect
 
     def load_states(self):
         self.main_menu_screen = MainMenu(self)

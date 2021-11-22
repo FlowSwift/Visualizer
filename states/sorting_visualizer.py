@@ -2,6 +2,8 @@
 import pygame, os
 import random
 
+from pygame.time import delay
+
 import config.config as config
 
 from states.state import State
@@ -11,10 +13,19 @@ class SortingVisualizer(State):
     sorting_background = pygame.image.load(os.path.join(config.assets_dir, "graphics", "background.jpg"))
     def __init__(self, visualiser):
         super().__init__(visualiser)
-        self.bars = Bars(visualiser)
+        self.bars = Bars(self, visualiser)
+        self.delay = 1 
         self.started = False
+        self.prev_text = None
     
     def update(self, delta_time, actions):
+        print(self.delay)
+        if actions["left_key"]:
+            if self.delay > 0:
+                self.delay -= 0.03
+        if actions["right_key"]:
+            if self.delay < 150:
+                self.delay += 0.03
         if pygame.time.get_ticks() >= self.bars.target_time:
             self.bars.update()
 
@@ -22,14 +33,18 @@ class SortingVisualizer(State):
         if not self.started:
             display.blit(SortingVisualizer.sorting_background, (0,0))
             self.started = True
+        if self.prev_text:
+            display.blit(SortingVisualizer.sorting_background, (self.prev_text.x, self.prev_text.y), self.prev_text)
+        self.prev_text = self.visualizer.draw_text(display, (f"Speed: {self.delay} :"), (69,69,69), self.visualizer.SCREEN_WIDTH/2, self.visualizer.SCREEN_HEIGHT/2 +100)
+        self.visualizer.draw_text(display, "USE: <><><>", (69,69,69), self.visualizer.SCREEN_WIDTH/2, self.visualizer.SCREEN_HEIGHT/2 +200)
         self.bars.render(display)
 
 class Bars:
-    def __init__(self, visualizer):
+    def __init__(self, sorting_visualizer, visualizer):
+        self.sorting_visualizer = sorting_visualizer
         self.start_pos = 20 # left starting position of the array
         self.bars_gap = 8
         self.bars_width =  3
-        self.delay = 1 
         self.array_length = 30
         self.array_bottom = 270
         self.array_height = 50
@@ -46,7 +61,7 @@ class Bars:
         self.next = False
 
     def add_delay(self, delay=None):
-        if not delay: delay = self.delay
+        if not delay: delay = self.sorting_visualizer.delay
         self.target_time = delay + pygame.time.get_ticks()
 
     def update(self):
@@ -59,7 +74,7 @@ class Bars:
                 if self.j < (len(self.bars_array) - self.i - 1):
                     if self.current_action == "compare":
                         self.bars_color[self.j], self.bars_color[self.j+1] = config.bars_compared_color,config.bars_compared_color
-                        self.add_delay(self.delay/1.5)
+                        self.add_delay(self.sorting_visualizer.delay/1.5)
                         if self.bars_array[self.j].y < self.bars_array[self.j+1].y:  
                             self.current_action = "swap"
                         else:
@@ -68,14 +83,14 @@ class Bars:
                         if self.action_stage == 0:
                             self.bars_color[self.j], self.bars_color[self.j+1] = "green", "green"
                             self.action_stage += 1
-                            self.add_delay(self.delay)
+                            self.add_delay(self.sorting_visualizer.delay)
                         elif self.action_stage == 1:
                             self.before_swap[0], self.before_swap[1] = self.bars_array[self.j], self.bars_array[self.j+1]
                             self.bars_array[self.j].height, self.bars_array[self.j+1].height = self.bars_array[self.j+1].height, self.bars_array[self.j].height  # get start and ending position of self.bars_array
                             self.bars_array[self.j].y, self.bars_array[self.j+1].y = self.bars_array[self.j+1].y, self.bars_array[self.j].y
                             self.current_action = "clear"
                             self.action_stage = 0
-                            self.add_delay(self.delay)
+                            self.add_delay(self.sorting_visualizer.delay)
                     elif self.current_action == "clear":
                         self.bars_color[self.j], self.bars_color[self.j+1] = config.bars_color, config.bars_color
                         self.next = True
