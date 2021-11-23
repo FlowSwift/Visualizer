@@ -1,4 +1,5 @@
 from states.main_menu import MainMenu
+from states.sorting_visualizer import array_bottom
 
 import config.config as config
 
@@ -22,7 +23,8 @@ class Visualizer():
         self.current_tick = 0
         self.state_stack = []
         self.load_states()
-    
+
+
     def visualizer_loop(self):
         while self.playing:
             self.get_dt()
@@ -33,7 +35,9 @@ class Visualizer():
     def check_events(self):
         for event in pygame.event.get():
             if event.type == pygame.VIDEORESIZE:
-                self.SCREEN_WIDTH, self.SCREEN_HEIGHT = (event.size)
+                self.SCREEN_WIDTH, self.SCREEN_HEIGHT = event.size
+                print(event.size)
+                self.render()
             if event.type == pygame.QUIT:
                 self.playing = False
                 self.running = False
@@ -71,6 +75,7 @@ class Visualizer():
         text_rect = text_surface.get_rect()
         text_rect.center = (x,y)
         surface.blit(text_surface, text_rect)
+        return text_rect
 
     def load_states(self):
         self.main_menu_screen = MainMenu(self)
