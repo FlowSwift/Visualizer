@@ -36,6 +36,7 @@ class Visualizer():
         for event in pygame.event.get():
             if event.type == pygame.VIDEORESIZE:
                 self.SCREEN_WIDTH, self.SCREEN_HEIGHT = event.size
+                print(self.state_stack[-1].bars.array_bottom)
                 print(event.size)
                 self.render()
             if event.type == pygame.QUIT:
