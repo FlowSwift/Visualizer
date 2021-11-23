@@ -1,7 +1,7 @@
 import os
 import pygame
 
-  # 0screen resolution
+  # screen resolution
 SCREEN_WIDTH, SCREEN_HEIGHT = 848, 480
 
   # bar_settings

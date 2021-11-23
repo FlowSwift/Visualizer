@@ -1,4 +1,5 @@
 from states.main_menu import MainMenu
+from states.sorting_visualizer import array_bottom
 
 import config.config as config
 
@@ -34,8 +35,9 @@ class Visualizer():
     def check_events(self):
         for event in pygame.event.get():
             if event.type == pygame.VIDEORESIZE:
-                self.SCREEN_WIDTH, self.SCREEN_HEIGHT = (1920, 1080)
+                self.SCREEN_WIDTH, self.SCREEN_HEIGHT = event.size
                 print(event.size)
+                self.render()
             if event.type == pygame.QUIT:
                 self.playing = False
                 self.running = False

@@ -7,13 +7,16 @@ import config.config as config
 
 from states.state import State
 
+array_bottom = config.SCREEN_HEIGHT
+array_min_height = array_bottom - 70
+array_max_height = array_bottom - 270
 
 class SortingVisualizer(State):
     sorting_background = pygame.image.load(os.path.join(config.assets_dir, "graphics", "background.jpg"))
     def __init__(self, visualiser):
         super().__init__(visualiser)
         self.delay = 50 
-        self.array_bottom = 479
+        self.array_length = 10
         self.array_modes = {"sort_mode" : "random", "duplicates" : False}  # sort modes: "random" "nearly_sorted"
         self.array_asc_order = True
         self.unsorted_amount = 2  # precentage
@@ -45,14 +48,6 @@ class Bars:
     def __init__(self, sorting_visualizer, visualizer):
         self.sorting_visualizer = sorting_visualizer
         self.visualizer = visualizer
-        self.array_length = 50
-        self.bars_width =  round((self.visualizer.SCREEN_WIDTH * 0.8 * 0.7) / self.array_length)
-        self.bars_gap = round((self.visualizer.SCREEN_WIDTH * 0.8 * 0.3) / self.array_length - 1)
-        self.start_pos = visualizer.SCREEN_WIDTH/2 - (((self.bars_width * self.array_length) + (self.bars_gap * self.array_length - 1))/2)
-        if self.array_length % 2 == 0: self.start_pos += (self.bars_gap + self.bars_width) / 2
-        self.start_pos = round(self.start_pos)
-        self.array_min_height = self.sorting_visualizer.array_bottom - 70
-        self.array_max_height = self.sorting_visualizer.array_bottom - 270
         self.bars_array = []
         self.bars_color = []
         self.swapped = False
@@ -114,42 +109,46 @@ class Bars:
                 self.i = 0
 
     def draw_bars(self, display):
-        current_pos = self.start_pos
+        bars_area = self.visualizer.SCREEN_WIDTH * 0.8
+        bars_width =  round((bars_area * 0.7) / self.sorting_visualizer.array_length)
+        bars_gap = math.ceil((bars_area * 0.3) / self.sorting_visualizer.array_length - 1)
+        start_pos = round((self.visualizer.SCREEN_WIDTH - ((bars_gap * (self.sorting_visualizer.array_length - 1)) + (bars_width * self.sorting_visualizer.array_length)))/2)
         if not self.bars_array or self.sorting == False:
             self.sorting = True
             self.bars_array = []
-            self.bars_color = [config.bars_color for i in range(self.array_length)]
+            self.bars_color = [config.bars_color for i in range(self.sorting_visualizer.array_length)]
             if self.sorting_visualizer.array_modes["duplicates"]:
-                numbers = [random.randrange(self.array_max_height,self.array_min_height) for i in range(self.array_length)]
+                numbers = [random.randrange(self.array_max_hei) for i in range(self.sorting_visualizer.array_length)]
             else: 
-                height_gap = round((self.array_min_height - self.array_max_height)/self.array_length)
+                height_gap = round((array_min_height - array_max_height)/self.sorting_visualizer.array_length)
                 numbers = []
-                i = self.array_max_height
-                for j in range(self.array_length):
+                i = array_max_height
+                for j in range(self.sorting_visualizer.array_length):
                     numbers.append(i)
                     i += height_gap
                 random.shuffle(numbers)
             if self.sorting_visualizer.array_modes["sort_mode"] == "nearly_sorted":
-                unsorted_amount = math.ceil(self.sorting_visualizer.unsorted_amount/100 * self.array_length)
+                unsorted_amount = math.ceil(self.sorting_visualizer.unsorted_amount/100 * self.sorting_visualizer.array_length)
                 numbers.sort(reverse=self.sorting_visualizer.array_asc_order)
                 for i in range(unsorted_amount):
                     random_num1 = random.randrange(3,len(numbers)-3)
                     random_num2 = random.randrange(random_num1-3, random_num1+4)
                     numbers[random_num1], numbers[random_num2] = numbers[random_num2], numbers[random_num1]
             for i in range(len(numbers)):
-                #self.bars_array.append(pygame.draw.line(display, self.bars_color[i], (current_pos,self.sorting_visualizer.array_bottom), (current_pos,numbers[i]), self.bars_width))  # line
-                self.bars_array.append(pygame.draw.rect(display, self.bars_color[i], (current_pos, numbers[i], self.bars_width, self.sorting_visualizer.array_bottom - numbers[i])))  # rect
-                current_pos += self.bars_gap + self.bars_width
+                #self.bars_array.append(pygame.draw.line(display, self.bars_color[i], (start_pos,array_bottom), (start_pos,numbers[i]), bars_width))  # line
+                self.bars_array.append(pygame.draw.rect(display, self.bars_color[i], (start_pos, numbers[i], bars_width, array_bottom - numbers[i])))  # rect
+                start_pos += bars_gap + bars_width
 
     def remove_bar(self, display, bar):
         display.blit(SortingVisualizer.sorting_background, (bar.x, bar.y), bar)
 
     def render(self, display):
+        print(array_bottom)
         if self.sorting:
             # get images size of bars and increase to max height, use it to replace a bar with the background and "remove" it
             img_cover_bar1, img_cover_bar2 = self.bars_array[self.j].copy(), self.bars_array[self.j+1].copy()
-            img_cover_bar1.height, img_cover_bar1.y = self.sorting_visualizer.array_bottom-self.array_max_height+1, self.array_max_height
-            img_cover_bar2.height, img_cover_bar2.y = self.sorting_visualizer.array_bottom-self.array_max_height+1, self.array_max_height
+            img_cover_bar1.height, img_cover_bar1.y = array_bottom-array_max_height+1, array_max_height
+            img_cover_bar2.height, img_cover_bar2.y = array_bottom-array_max_height+1, array_max_height
             self.remove_bar(display, img_cover_bar1)
             self.remove_bar(display, img_cover_bar2)
             pygame.draw.rect(display, self.bars_color[self.j], self.bars_array[self.j])
