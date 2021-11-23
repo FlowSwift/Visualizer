@@ -6,8 +6,10 @@ SCREEN_WIDTH, SCREEN_HEIGHT = 848, 480
 
   # bar_settings
 bars_color = "red"
-bars_compared_color = "blue"
-bars_swapped_color = "green"
+bars_compared_color = (96, 175, 255) #(87, 143, 199)
+bars_swap_color = (0, 112, 224)
+bars_swapped_color = (239, 210, 141)
+
 
   # ASSETS DIR
 assets_dir = os.path.join("assets")

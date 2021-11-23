@@ -22,7 +22,8 @@ class Visualizer():
         self.current_tick = 0
         self.state_stack = []
         self.load_states()
-    
+
+
     def visualizer_loop(self):
         while self.playing:
             self.get_dt()
@@ -33,7 +34,8 @@ class Visualizer():
     def check_events(self):
         for event in pygame.event.get():
             if event.type == pygame.VIDEORESIZE:
-                self.SCREEN_WIDTH, self.SCREEN_HEIGHT = (event.size)
+                self.SCREEN_WIDTH, self.SCREEN_HEIGHT = (1920, 1080)
+                print(event.size)
             if event.type == pygame.QUIT:
                 self.playing = False
                 self.running = False
