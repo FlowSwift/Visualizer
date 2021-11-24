@@ -1,3 +1,4 @@
+from pygame.constants import MOUSEBUTTONDOWN, MOUSEBUTTONUP
 from states.main_menu import MainMenu
 
 import config.config as config
@@ -19,7 +20,7 @@ class Visualizer():
         self.SCREEN_WIDTH, self.SCREEN_HEIGHT = config.SCREEN_WIDTH, config.SCREEN_HEIGHT
         self.WINDOW = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
         self.running, self.playing = True, True
-        self.actions = {"space": False, "left_key": False, "right_key": False, "up_key": False, "down_key": False}
+        self.actions = {"space": False, "left_key": False, "right_key": False, "up_key": False, "down_key": False, "left_mouse": False}
         self.dt, self.prev_time = 0, 0
         self.display_reset = True
         self.resize_delay = 0
@@ -51,7 +52,8 @@ class Visualizer():
                 self.state_stack[-1].screen_update(self.WINDOW,((self.SCREEN_HEIGHT-old_height)/old_height)*100)
                 pygame.display.flip()
             if event.type == pygame.WINDOWEXPOSED:
-                self.display_reset = True
+                #self.display_reset = True
+                pass
             if event.type == pygame.QUIT:
                 self.playing = False
                 self.running = False
@@ -79,6 +81,12 @@ class Visualizer():
                     self.actions["up_key"] = False
                 if event.key == pygame.K_DOWN:
                     self.actions["down_key"] = False
+            if event.type == MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    self.actions["left_mouse"] = True
+            if event.type == MOUSEBUTTONUP:
+                if event.button == 1:
+                    self.actions["left_mouse"] = False
 
     def update(self):
         self.state_stack[-1].update(self.dt, self.actions)

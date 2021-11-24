@@ -7,6 +7,7 @@ SCREEN_WIDTH, SCREEN_HEIGHT = 848, 480
   # overlay_settings
 overlay_color = "cyan"
 overlay_text_color = "black"
+overlay_text_selected = "red"
 
   # bar_settings
 bars_color = "red"
