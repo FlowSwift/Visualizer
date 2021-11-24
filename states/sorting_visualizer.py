@@ -8,24 +8,24 @@ import config.config as config
 from states.state import State
 
 class SortingVisualizer(State):
-    def __init__(self, visualiser):
-        super().__init__(visualiser)
-        self.visualizer.display_reset = True
+    def __init__(self, visualizer_manager):
+        super().__init__(visualizer_manager)
+        self.visualizer_manager = visualizer_manager
+        self.visualizer_manager.display_reset = True
         self.array_bottom = config.SCREEN_HEIGHT
         self.array_min_height = round(self.array_bottom / 1.2)
         self.array_max_height = round(self.array_bottom / 2.2)
-        self.delay = 50 
+        self.delay = 50
         self.array_length = 200
-        self.array_modes = {"sort_mode" : "random", "duplicates" : False}  # sort modes: "random" "nearly_sorted"
+        self.array_modes = {"sort_mode" : "random", "duplicates" : True}  # sort modes: "random" "nearly_sorted"
         self.array_asc_order = True
         self.unsorted_amount = 1  # precentage
         self.reset_delay = 0
         self.target_time = 0
         self.sorting = False
-        self.prev_text = None
-        self.render_bool = True
         self.delay_input = pygame.time.get_ticks()
-        self.bars = Bars(self, visualiser)
+        self.overlay = Overlay(self, visualizer_manager)
+        self.bubble_sort = BubbleSort(self, visualizer_manager, self.overlay)
         self.sorting_background = pygame.image.load(os.path.join(config.assets_dir, "graphics", "background.jpg")).convert()
         
     
@@ -34,48 +34,83 @@ class SortingVisualizer(State):
             self.delay_input = pygame.time.get_ticks() + 100
             if actions["left_key"]:
                 if self.delay > 0:
-                    print(self.delay)
                     self.delay -= 1
-                    self.render_bool = True
+                    self.overlay.render_bool = True
             if actions["right_key"]:
                 if self.delay < 150:
                     self.delay += 1
-                    self.render_bool = True
+                    self.overlay.render_bool = True
             if actions["space"]:
                 self.add_delay(200, self.reset_delay)
-                self.bars.reset_loop()
-        self.bars.update()
+                self.bubble_sort.reset_loop()
+        self.bubble_sort.update()
         
 
     def render(self, display):
         if not self.sorting:
             display.blit(self.sorting_background, (0,0))
-            self.render_bool = True
-        if self.render_bool:
-            self.render_text(display)
-            self.render_bool = False
-            self.visualizer.display_reset = True
-        self.render_overlay(display)
-        self.bars.render(display)
-
-    def render_overlay(self, display):
-        pygame.draw.rect(display, config.overlay_color, (0, 0, self.visualizer.SCREEN_WIDTH, self.visualizer.SCREEN_HEIGHT*0.20))
-
-    def render_text(self,display):
-        if self.prev_text:  # hide previous text
-            display.blit(self.sorting_background, (self.prev_text.x, self.prev_text.y), self.prev_text)
-        self.prev_text = self.visualizer.draw_text(display, (f"Speed: {self.delay} :"), (69,69,69), self.visualizer.SCREEN_WIDTH/2, self.visualizer.SCREEN_HEIGHT/2 -100)
-        self.visualizer.draw_text(display, "USE: <><><>", (69,69,69), self.visualizer.SCREEN_WIDTH/2, self.visualizer.SCREEN_HEIGHT/2 -200)
+            self.overlay.render_bool = True
+        if self.overlay.render_bool:
+            self.overlay.render_bool = False
+            self.visualizer_manager.display_reset = True
+            self.overlay.render(display)
+        self.bubble_sort.render(display)
 
     def add_delay(self, delay=None, delay_type=None):
         if delay == None: delay = self.sorting_visualizer.delay
         if not delay_type: delay_type = self.target_time
         self.target_time = delay + pygame.time.get_ticks()
 
-class Bars:
-    def __init__(self, sorting_visualizer, visualizer):
+    def screen_update(self, display, height_diff):
+        self.overlay.screen_update(display, height_diff)
+        self.bubble_sort.screen_update(display, height_diff)
+
+
+class Overlay:
+    def __init__(self, sorting_visualizer, visualizer_manager):
         self.sorting_visualizer = sorting_visualizer
-        self.visualizer = visualizer
+        self.visualizer_manager = visualizer_manager
+        self.prev_text = None
+        self.render_bool = True
+        self.overlay_height = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.20)
+        self.start_stop_pos_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.08)
+        self.start_stop_pos_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.04)
+        self.box_height = math.floor(self.overlay_height * 0.4 )
+        self.box_width = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.10)
+
+
+    def update(self):
+        pass
+
+    def render(self, display):
+        self.overlay_rect = pygame.draw.rect(display, config.overlay_color, (0, 0, self.visualizer_manager.SCREEN_WIDTH, self.overlay_height))
+        self.render_text(display)
+        
+        #pygame.draw.rect(display, config.overlay_color, (0, 0, self.visualizer_manager.SCREEN_WIDTH, self.overlay_height))
+
+    def render_text(self,display):
+        #if self.prev_text:  # hide previous text(if not done by rendering the overlay under)
+        #    display.blit(self.sorting_visualizer.sorting_background, (self.prev_text.x, self.prev_text.y), self.prev_text)
+        self.prev_text1 = self.visualizer_manager.draw_text(display, (f"Speed: {self.sorting_visualizer.delay} :"), config.overlay_text_color, self.start_stop_pos_x, self.start_stop_pos_y, "font_sorting_overlay")
+        self.prev_text2 = self.visualizer_manager.draw_text(display, (f"Speed: {self.sorting_visualizer.delay} :"), (69,69,69), self.visualizer_manager.SCREEN_WIDTH/2, self.visualizer_manager.SCREEN_HEIGHT/2 -100)
+        self.visualizer_manager.draw_text(display, "USE: <><><>", (69,69,69), self.visualizer_manager.SCREEN_WIDTH/2, self.visualizer_manager.SCREEN_HEIGHT/2 -200)
+
+    def screen_update(self, display, height_diff):
+        self.overlay_height = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.20)
+        self.start_stop_pos_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.08)
+        self.start_stop_pos_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.04)
+        self.box_height = math.floor(self.overlay_height * 0.4 )
+        self.box_width = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.10)
+        self.render(display)
+
+    def render_overlay(self, display):
+        pass
+
+class BubbleSort:
+    def __init__(self, sorting_visualizer, visualizer_manager, overlay):
+        self.sorting_visualizer = sorting_visualizer
+        self.visualizer_manager = visualizer_manager
+        self.overlay = overlay
         self.bars_array = []
         self.bars_color = []
         self.swapped = False
@@ -87,9 +122,6 @@ class Bars:
         self.j = 0
         self.initilize = False
         self.next = False
-
-
-    
 
     def update(self):
         if self.bars_array and pygame.time.get_ticks() >= self.sorting_visualizer.target_time:
@@ -162,10 +194,10 @@ class Bars:
                     self.numbers[random_num1], self.numbers[random_num2] = self.numbers[random_num2], self.numbers[random_num1]
 
     def draw_bars(self, display, height_diff=0):
-        bars_area = self.visualizer.SCREEN_WIDTH * 0.8
+        bars_area = self.visualizer_manager.SCREEN_WIDTH * 0.8
         bars_width =  round((bars_area * 0.7) / self.sorting_visualizer.array_length)
         bars_gap = math.ceil((bars_area * 0.3) / self.sorting_visualizer.array_length - 1)
-        start_pos = round((self.visualizer.SCREEN_WIDTH - ((bars_gap * (self.sorting_visualizer.array_length - 1)) + (bars_width * self.sorting_visualizer.array_length)))/2)
+        start_pos = round((self.visualizer_manager.SCREEN_WIDTH - ((bars_gap * (self.sorting_visualizer.array_length - 1)) + (bars_width * self.sorting_visualizer.array_length)))/2)
         self.generate_bars()
         for i in range(self.sorting_visualizer.array_length):
             #self.bars_array.append(pygame.draw.line(display, self.bars_color[i], (start_pos,self.sorting_visualizer.array_bottom), (start_pos,self.numbers[i]), bars_width))  # line
@@ -193,10 +225,8 @@ class Bars:
 
     def screen_update(self, display, height_diff):
         display.blit(self.sorting_visualizer.sorting_background, (0,0))
-        self.sorting_visualizer.render_text(display)
+        self.overlay.render_text(display)
         self.reset_loop()
-        self.sorting_visualizer.array_bottom = self.visualizer.SCREEN_HEIGHT
+        self.sorting_visualizer.array_bottom = self.visualizer_manager.SCREEN_HEIGHT
         self.sorting_visualizer.array_min_height = round(self.sorting_visualizer.array_bottom / 1.2)
         self.sorting_visualizer.array_max_height = round(self.sorting_visualizer.array_bottom / 2.2)
-
-

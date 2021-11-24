@@ -1,9 +1,8 @@
-from pygame import display
 from states.main_menu import MainMenu
 
 import config.config as config
 
-import os, time
+import os, time, math
 
 import pygame
 
@@ -11,7 +10,8 @@ clock = pygame.time.Clock()
 pygame.init()
 
 class Visualizer():
-    font = pygame.font.Font(os.path.join(config.fonts_dir, "Game Of Squids.ttf"), 20)
+    font_squid = pygame.font.Font(os.path.join(config.fonts_dir, "Game Of Squids.ttf"), 20)
+    font_sorting_overlay_dir = os.path.join(config.fonts_dir, "Cotton Butter.ttf")
     def __init__(self) -> None:
         self.t = 0
         #self.CANVAS_W, self.CANVAS_H = config.SCREEN_WIDTH, config.SCREEN_HEIGHT
@@ -48,8 +48,10 @@ class Visualizer():
                 old_height = self.SCREEN_HEIGHT
                 self.SCREEN_WIDTH, self.SCREEN_HEIGHT = event.size
                 self.WINDOW = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.RESIZABLE)
-                self.state_stack[-1].bars.screen_update(self.WINDOW,((self.SCREEN_HEIGHT-old_height)/old_height)*100)
+                self.state_stack[-1].screen_update(self.WINDOW,((self.SCREEN_HEIGHT-old_height)/old_height)*100)
                 pygame.display.flip()
+            if event.type == pygame.WINDOWEXPOSED:
+                self.display_reset = True
             if event.type == pygame.QUIT:
                 self.playing = False
                 self.running = False
@@ -78,15 +80,21 @@ class Visualizer():
         if self.display_reset:
             pygame.display.flip()
             self.display_reset = False
-        pygame.display.update(self.SCREEN_WIDTH *0.1, self.SCREEN_HEIGHT*0.4, self.SCREEN_WIDTH *0.8, self.SCREEN_HEIGHT*0.6)
+        pygame.display.update()
 
     def get_dt(self):
         now = time.time()
         self.dt = now - self.prev_time
         self.prev_time = now
 
-    def draw_text(self, surface, text, color, x, y):
-        text_surface = self.font.render(text, True, color)
+    def draw_text(self, surface, text, color, x, y, font=None, scale=False):
+        if not font or font == "font_squid":
+            font = Visualizer.font_squid
+        elif font == "font_sorting_overlay":
+            size = math.floor((self.SCREEN_WIDTH + self.SCREEN_HEIGHT) * 0.02)
+            font = self.font_table[size]
+        text_surface = font.render(text, True, color)
+        #text_surface = pygame.transform.scale(text_surface,(self.SCREEN_WIDTH, math.floor(self.SCREEN_HEIGHT * 0.20)))
         #text_surface.set_colorkey((0, 0, 0))
         text_rect = text_surface.get_rect()
         text_rect.center = (x,y)
@@ -94,6 +102,10 @@ class Visualizer():
         return text_rect
 
     def load_states(self):
+        ft = pygame.font.Font
+        self.font_table = {}
+        for i in range(0, 100):
+            self.font_table[i] = ft(self.font_sorting_overlay_dir, i)
         self.main_menu_screen = MainMenu(self)
         self.state_stack.append(self.main_menu_screen)
 

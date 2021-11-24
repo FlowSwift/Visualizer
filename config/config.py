@@ -5,8 +5,8 @@ import pygame
 SCREEN_WIDTH, SCREEN_HEIGHT = 848, 480
 
   # overlay_settings
-overlay_color = "red"
-
+overlay_color = "cyan"
+overlay_text_color = "black"
 
   # bar_settings
 bars_color = "red"
