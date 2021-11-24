@@ -26,6 +26,7 @@ class Visualizer():
         self.current_tick = 0
         self.state_stack = []
         self.load_states()
+        self.delay_input = 0
 
 
     def visualizer_loop(self):
@@ -49,17 +50,18 @@ class Visualizer():
                 self.WINDOW = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.RESIZABLE)
                 self.state_stack[-1].bars.screen_update(self.WINDOW,((self.SCREEN_HEIGHT-old_height)/old_height)*100)
                 pygame.display.flip()
-                print(event.size)
             if event.type == pygame.QUIT:
                 self.playing = False
                 self.running = False
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    self.actions["space"] = True
-                if event.key == pygame.K_LEFT:
-                    self.actions["left_key"] = True
-                if event.key == pygame.K_RIGHT:
-                    self.actions["right_key"] = True
+                if pygame.time.get_ticks() > self.delay_input:
+                    self.delay_input = pygame.time.get_ticks() + 100
+                    if event.key == pygame.K_SPACE:
+                        self.actions["space"] = True
+                    if event.key == pygame.K_LEFT:
+                        self.actions["left_key"] = True
+                    if event.key == pygame.K_RIGHT:
+                        self.actions["right_key"] = True
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_SPACE:
                     self.actions["space"] = False
@@ -67,7 +69,7 @@ class Visualizer():
                     self.actions["left_key"] = False
                 if event.key == pygame.K_RIGHT:
                     self.actions["right_key"] = False
-    
+
     def update(self):
         self.state_stack[-1].update(self.dt, self.actions)
 
@@ -92,7 +94,6 @@ class Visualizer():
         return text_rect
 
     def load_states(self):
-        self.sorting_background = pygame.image.load(os.path.join(config.assets_dir, "graphics", "background.jpg")).convert()
         self.main_menu_screen = MainMenu(self)
         self.state_stack.append(self.main_menu_screen)
 

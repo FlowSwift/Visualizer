@@ -15,44 +15,60 @@ class SortingVisualizer(State):
         self.array_min_height = round(self.array_bottom / 1.2)
         self.array_max_height = round(self.array_bottom / 2.2)
         self.delay = 50 
-        self.array_length = 50
-        self.array_modes = {"sort_mode" : "nearly_sorted", "duplicates" : False}  # sort modes: "random" "nearly_sorted"
+        self.array_length = 200
+        self.array_modes = {"sort_mode" : "random", "duplicates" : False}  # sort modes: "random" "nearly_sorted"
         self.array_asc_order = True
         self.unsorted_amount = 1  # precentage
         self.reset_delay = 0
         self.target_time = 0
         self.sorting = False
         self.prev_text = None
+        self.render_bool = True
+        self.delay_input = pygame.time.get_ticks()
         self.bars = Bars(self, visualiser)
         self.sorting_background = pygame.image.load(os.path.join(config.assets_dir, "graphics", "background.jpg")).convert()
         
     
     def update(self, delta_time, actions):
-        if actions["left_key"]:
-            if self.delay > 0:
-                self.delay -= 0.03
-        if actions["right_key"]:
-            if self.delay < 150:
-                self.delay += 0.03
-        if actions["space"]:
-            self.add_delay(200, self.reset_delay)
-            self.bars.reset_loop()
+        if pygame.time.get_ticks() > self.delay_input:
+            self.delay_input = pygame.time.get_ticks() + 100
+            if actions["left_key"]:
+                if self.delay > 0:
+                    print(self.delay)
+                    self.delay -= 1
+                    self.render_bool = True
+            if actions["right_key"]:
+                if self.delay < 150:
+                    self.delay += 1
+                    self.render_bool = True
+            if actions["space"]:
+                self.add_delay(200, self.reset_delay)
+                self.bars.reset_loop()
         self.bars.update()
+        
 
     def render(self, display):
         if not self.sorting:
             display.blit(self.sorting_background, (0,0))
-        self.render_text(display)
+            self.render_bool = True
+        if self.render_bool:
+            self.render_text(display)
+            self.render_bool = False
+            self.visualizer.display_reset = True
+        self.render_overlay(display)
         self.bars.render(display)
 
+    def render_overlay(self, display):
+        pygame.draw.rect(display, config.overlay_color, (0, 0, self.visualizer.SCREEN_WIDTH, self.visualizer.SCREEN_HEIGHT*0.20))
+
     def render_text(self,display):
-        if self.prev_text:
+        if self.prev_text:  # hide previous text
             display.blit(self.sorting_background, (self.prev_text.x, self.prev_text.y), self.prev_text)
         self.prev_text = self.visualizer.draw_text(display, (f"Speed: {self.delay} :"), (69,69,69), self.visualizer.SCREEN_WIDTH/2, self.visualizer.SCREEN_HEIGHT/2 -100)
         self.visualizer.draw_text(display, "USE: <><><>", (69,69,69), self.visualizer.SCREEN_WIDTH/2, self.visualizer.SCREEN_HEIGHT/2 -200)
 
     def add_delay(self, delay=None, delay_type=None):
-        if not delay: delay = self.sorting_visualizer.delay
+        if delay == None: delay = self.sorting_visualizer.delay
         if not delay_type: delay_type = self.target_time
         self.target_time = delay + pygame.time.get_ticks()
 
@@ -82,11 +98,6 @@ class Bars:
                 self.j+=1
                 self.next = False
             if self.i < len(self.bars_array):
-                if len(self.bars_array) > 50:
-                    print(self.sorting_visualizer.array_length)
-                a = len(self.bars_array) - 1 - self.i
-                b = len(self.bars_array)
-                c = self.i
                 if self.j < (len(self.bars_array) - 1 - self.i):
                     if self.current_action == "compare" or not self.current_action:
                         self.bars_color[self.j], self.bars_color[self.j+1] = config.bars_compared_color,config.bars_compared_color

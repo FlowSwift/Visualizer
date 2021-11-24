@@ -4,6 +4,10 @@ import pygame
   # screen resolution
 SCREEN_WIDTH, SCREEN_HEIGHT = 848, 480
 
+  # overlay_settings
+overlay_color = "red"
+
+
   # bar_settings
 bars_color = "red"
 bars_compared_color = (96, 175, 255) #(87, 143, 199)
