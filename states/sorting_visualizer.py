@@ -7,22 +7,24 @@ import config.config as config
 
 from states.state import State
 
-array_bottom = config.SCREEN_HEIGHT
-array_min_height = array_bottom - 70
-array_max_height = array_bottom - 270
-
 class SortingVisualizer(State):
-    sorting_background = pygame.image.load(os.path.join(config.assets_dir, "graphics", "background.jpg"))
     def __init__(self, visualiser):
         super().__init__(visualiser)
+        self.visualizer.display_reset = True
+        self.array_bottom = config.SCREEN_HEIGHT
+        self.array_min_height = round(self.array_bottom / 1.2)
+        self.array_max_height = round(self.array_bottom / 2.2)
         self.delay = 50 
-        self.array_length = 10
-        self.array_modes = {"sort_mode" : "random", "duplicates" : False}  # sort modes: "random" "nearly_sorted"
+        self.array_length = 50
+        self.array_modes = {"sort_mode" : "nearly_sorted", "duplicates" : False}  # sort modes: "random" "nearly_sorted"
         self.array_asc_order = True
-        self.unsorted_amount = 2  # precentage
-        self.started = False
+        self.unsorted_amount = 1  # precentage
+        self.reset_delay = 0
+        self.target_time = 0
+        self.sorting = False
         self.prev_text = None
         self.bars = Bars(self, visualiser)
+        self.sorting_background = pygame.image.load(os.path.join(config.assets_dir, "graphics", "background.jpg")).convert()
         
     
     def update(self, delta_time, actions):
@@ -32,17 +34,27 @@ class SortingVisualizer(State):
         if actions["right_key"]:
             if self.delay < 150:
                 self.delay += 0.03
+        if actions["space"]:
+            self.add_delay(200, self.reset_delay)
+            self.bars.reset_loop()
         self.bars.update()
 
     def render(self, display):
-        if not self.started:
-            display.blit(SortingVisualizer.sorting_background, (0,0))
-            self.started = True
+        if not self.sorting:
+            display.blit(self.sorting_background, (0,0))
+        self.render_text(display)
+        self.bars.render(display)
+
+    def render_text(self,display):
         if self.prev_text:
-            display.blit(SortingVisualizer.sorting_background, (self.prev_text.x, self.prev_text.y), self.prev_text)
+            display.blit(self.sorting_background, (self.prev_text.x, self.prev_text.y), self.prev_text)
         self.prev_text = self.visualizer.draw_text(display, (f"Speed: {self.delay} :"), (69,69,69), self.visualizer.SCREEN_WIDTH/2, self.visualizer.SCREEN_HEIGHT/2 -100)
         self.visualizer.draw_text(display, "USE: <><><>", (69,69,69), self.visualizer.SCREEN_WIDTH/2, self.visualizer.SCREEN_HEIGHT/2 -200)
-        self.bars.render(display)
+
+    def add_delay(self, delay=None, delay_type=None):
+        if not delay: delay = self.sorting_visualizer.delay
+        if not delay_type: delay_type = self.target_time
+        self.target_time = delay + pygame.time.get_ticks()
 
 class Bars:
     def __init__(self, sorting_visualizer, visualizer):
@@ -55,30 +67,30 @@ class Bars:
         self.current_action = "compare"
         self.action_stage = 0
         self.complex_visualize = False
-        self.target_time = 0
         self.i = 0
         self.j = 0
         self.initilize = False
-        self.sorting = False
         self.next = False
-        self.generate_bars()
 
-    def add_delay(self, delay=None):
-        if not delay: delay = self.sorting_visualizer.delay
-        self.target_time = delay + pygame.time.get_ticks()
+
+    
 
     def update(self):
-        if self.bars_array and pygame.time.get_ticks() >= self.target_time:
-            self.sorting = True
+        if self.bars_array and pygame.time.get_ticks() >= self.sorting_visualizer.target_time:
             if self.next:
-                self.current_action = "compare"
+                self.current_action = None
                 self.j+=1
                 self.next = False
             if self.i < len(self.bars_array):
+                if len(self.bars_array) > 50:
+                    print(self.sorting_visualizer.array_length)
+                a = len(self.bars_array) - 1 - self.i
+                b = len(self.bars_array)
+                c = self.i
                 if self.j < (len(self.bars_array) - 1 - self.i):
-                    if self.current_action == "compare":
+                    if self.current_action == "compare" or not self.current_action:
                         self.bars_color[self.j], self.bars_color[self.j+1] = config.bars_compared_color,config.bars_compared_color
-                        self.add_delay(self.sorting_visualizer.delay)
+                        self.sorting_visualizer.add_delay(self.sorting_visualizer.delay)
                         if self.bars_array[self.j].y < self.bars_array[self.j+1].y:  
                             self.current_action = "swap"
                         else:
@@ -88,7 +100,7 @@ class Bars:
                         if self.action_stage == 0:
                             self.bars_color[self.j], self.bars_color[self.j+1] = config.bars_swap_color, config.bars_swap_color
                             self.action_stage += 1
-                            self.add_delay(self.sorting_visualizer.delay*3)
+                            self.sorting_visualizer.add_delay(self.sorting_visualizer.delay*3)
                         elif self.action_stage == 1:
                             self.bars_color[self.j], self.bars_color[self.j+1] = config.bars_swapped_color, config.bars_swapped_color
                             self.before_swap[0], self.before_swap[1] = self.bars_array[self.j], self.bars_array[self.j+1]
@@ -96,7 +108,7 @@ class Bars:
                             self.bars_array[self.j].y, self.bars_array[self.j+1].y = self.bars_array[self.j+1].y, self.bars_array[self.j].y
                             self.current_action = "clear"
                             self.action_stage = 0
-                            self.add_delay(self.sorting_visualizer.delay*3)
+                            self.sorting_visualizer.add_delay(self.sorting_visualizer.delay*3)
                     elif self.current_action == "clear":
                         self.bars_color[self.j], self.bars_color[self.j+1] = config.bars_color, config.bars_color
                         self.next = True
@@ -104,24 +116,28 @@ class Bars:
                     self.j = 0
                     self.i += 1
                     if not self.swapped:
-                        self.sorting = False
-                        self.generate_bars()
-                        self.i = 0
+                        self.reset_loop()
                     self.swapped = False
             else:
-                self.sorting = False
-                self.generate_bars()
-                self.i = 0
+                self.reset_loop()
+
+    def reset_loop(self):
+        self.current_action = None
+        self.sorting_visualizer.sorting = False
+        self.generate_bars()
+        self.i = 0
+        self.j = 0
 
     def generate_bars(self):
-        if not self.bars_array or self.sorting == False:
-            self.bars_array = []
+        self.bars_array = []
+        self.bars_color = [config.bars_color for i in range(self.sorting_visualizer.array_length)]
+        if not self.bars_array or self.sorting_visualizer.sorting == False:
             if self.sorting_visualizer.array_modes["duplicates"]:
-                self.numbers = [random.randrange(self.array_max_hei) for i in range(self.sorting_visualizer.array_length)]
+                self.numbers = [random.randrange(self.sorting_visualizer.array_max_height, self.sorting_visualizer.array_min_height) for i in range(self.sorting_visualizer.array_length)]
             else: 
-                height_gap = round((array_min_height - array_max_height)/self.sorting_visualizer.array_length)
+                height_gap = round((self.sorting_visualizer.array_min_height - self.sorting_visualizer.array_max_height)/self.sorting_visualizer.array_length)
                 self.numbers = []
-                i = array_max_height
+                i = self.sorting_visualizer.array_max_height
                 for j in range(self.sorting_visualizer.array_length):
                     self.numbers.append(i)
                     i += height_gap
@@ -134,36 +150,42 @@ class Bars:
                     random_num2 = random.randrange(random_num1-3, random_num1+4)
                     self.numbers[random_num1], self.numbers[random_num2] = self.numbers[random_num2], self.numbers[random_num1]
 
-    def draw_bars(self, display):
-        self.bars_color = [config.bars_color for i in range(self.sorting_visualizer.array_length)]
+    def draw_bars(self, display, height_diff=0):
         bars_area = self.visualizer.SCREEN_WIDTH * 0.8
         bars_width =  round((bars_area * 0.7) / self.sorting_visualizer.array_length)
         bars_gap = math.ceil((bars_area * 0.3) / self.sorting_visualizer.array_length - 1)
         start_pos = round((self.visualizer.SCREEN_WIDTH - ((bars_gap * (self.sorting_visualizer.array_length - 1)) + (bars_width * self.sorting_visualizer.array_length)))/2)
+        self.generate_bars()
         for i in range(self.sorting_visualizer.array_length):
-            #self.bars_array.append(pygame.draw.line(display, self.bars_color[i], (start_pos,array_bottom), (start_pos,self.numbers[i]), bars_width))  # line
-            self.bars_array.append(pygame.draw.rect(display, self.bars_color[i], (start_pos, self.numbers[i], bars_width, array_bottom - self.numbers[i])))  # rect
+            #self.bars_array.append(pygame.draw.line(display, self.bars_color[i], (start_pos,self.sorting_visualizer.array_bottom), (start_pos,self.numbers[i]), bars_width))  # line
+            self.bars_array.append(pygame.draw.rect(display, self.bars_color[i], (start_pos, self.numbers[i], bars_width, self.sorting_visualizer.array_bottom - self.numbers[i])))  # rect
             start_pos += bars_gap + bars_width
 
+
     def remove_bar(self, display, bar):
-        display.blit(SortingVisualizer.sorting_background, (bar.x, bar.y), bar)
+        display.blit(self.sorting_visualizer.sorting_background, (bar.x, bar.y), bar)
 
     def render(self, display):
-        if self.sorting:
+        if self.sorting_visualizer.sorting:
             # get images size of bars and increase to max height, use it to replace a bar with the background and "remove" it
             img_cover_bar1, img_cover_bar2 = self.bars_array[self.j].copy(), self.bars_array[self.j+1].copy()
-            img_cover_bar1.height, img_cover_bar1.y = array_bottom-array_max_height+1, array_max_height
-            img_cover_bar2.height, img_cover_bar2.y = array_bottom-array_max_height+1, array_max_height
+            img_cover_bar1.height, img_cover_bar1.y = self.sorting_visualizer.array_bottom-self.sorting_visualizer.array_max_height+1, self.sorting_visualizer.array_max_height
+            img_cover_bar2.height, img_cover_bar2.y = self.sorting_visualizer.array_bottom-self.sorting_visualizer.array_max_height+1, self.sorting_visualizer.array_max_height
             self.remove_bar(display, img_cover_bar1)
             self.remove_bar(display, img_cover_bar2)
             pygame.draw.rect(display, self.bars_color[self.j], self.bars_array[self.j])
             pygame.draw.rect(display, self.bars_color[self.j+1], self.bars_array[self.j+1])
         else:
-            display.blit(SortingVisualizer.sorting_background, (0,0))
+            self.sorting_visualizer.sorting = True
+            
             self.draw_bars(display)
 
-    def screen_update(self, display):
-        display.blit(SortingVisualizer.sorting_background, (0,0))
-        self.draw_bars(display)
+    def screen_update(self, display, height_diff):
+        display.blit(self.sorting_visualizer.sorting_background, (0,0))
+        self.sorting_visualizer.render_text(display)
+        self.reset_loop()
+        self.sorting_visualizer.array_bottom = self.visualizer.SCREEN_HEIGHT
+        self.sorting_visualizer.array_min_height = round(self.sorting_visualizer.array_bottom / 1.2)
+        self.sorting_visualizer.array_max_height = round(self.sorting_visualizer.array_bottom / 2.2)
 
 
