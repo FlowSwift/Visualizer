@@ -31,7 +31,7 @@ class SortingVisualizer(State):
     
     def update(self, delta_time, actions):
         if pygame.time.get_ticks() > self.delay_input:
-            self.delay_input = pygame.time.get_ticks() + 100
+            self.delay_input = pygame.time.get_ticks() + 30
             if actions["left_key"]:
                 if self.delay > 0:
                     self.delay -= 1
@@ -39,6 +39,14 @@ class SortingVisualizer(State):
             if actions["right_key"]:
                 if self.delay < 150:
                     self.delay += 1
+                    self.overlay.render_bool = True
+            if actions["down_key"]:
+                if self.array_length > 10:
+                    self.array_length -= 2
+                    self.overlay.render_bool = True
+            if actions["up_key"]:
+                if self.array_length < 250:
+                    self.array_length += 2
                     self.overlay.render_bool = True
             if actions["space"]:
                 self.add_delay(200, self.reset_delay)
@@ -73,8 +81,6 @@ class Overlay:
         self.prev_text = None
         self.render_bool = True
         self.overlay_height = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.20)
-        self.start_stop_pos_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.08)
-        self.start_stop_pos_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.04)
         self.box_height = math.floor(self.overlay_height * 0.4 )
         self.box_width = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.10)
 
@@ -91,14 +97,17 @@ class Overlay:
     def render_text(self,display):
         #if self.prev_text:  # hide previous text(if not done by rendering the overlay under)
         #    display.blit(self.sorting_visualizer.sorting_background, (self.prev_text.x, self.prev_text.y), self.prev_text)
-        self.prev_text1 = self.visualizer_manager.draw_text(display, (f"Speed: {self.sorting_visualizer.delay} :"), config.overlay_text_color, self.start_stop_pos_x, self.start_stop_pos_y, "font_sorting_overlay")
-        self.prev_text2 = self.visualizer_manager.draw_text(display, (f"Speed: {self.sorting_visualizer.delay} :"), (69,69,69), self.visualizer_manager.SCREEN_WIDTH/2, self.visualizer_manager.SCREEN_HEIGHT/2 -100)
+        start_stop_pos_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.08)
+        start_stop_pos_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.04)
+        array_length_pos_x = start_stop_pos_x
+        array_length_pos_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.13)
+
+        self.visualizer_manager.draw_text(display, (f"Speed: {self.sorting_visualizer.delay} :"), config.overlay_text_color, start_stop_pos_x, start_stop_pos_y, "font_sorting_overlay")
+        self.visualizer_manager.draw_text(display, (f"Length: {self.sorting_visualizer.array_length} :"), config.overlay_text_color, array_length_pos_x, array_length_pos_y, "font_sorting_overlay")
         self.visualizer_manager.draw_text(display, "USE: <><><>", (69,69,69), self.visualizer_manager.SCREEN_WIDTH/2, self.visualizer_manager.SCREEN_HEIGHT/2 -200)
 
     def screen_update(self, display, height_diff):
         self.overlay_height = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.20)
-        self.start_stop_pos_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.08)
-        self.start_stop_pos_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.04)
         self.box_height = math.floor(self.overlay_height * 0.4 )
         self.box_width = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.10)
         self.render(display)

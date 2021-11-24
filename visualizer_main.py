@@ -19,7 +19,7 @@ class Visualizer():
         self.SCREEN_WIDTH, self.SCREEN_HEIGHT = config.SCREEN_WIDTH, config.SCREEN_HEIGHT
         self.WINDOW = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
         self.running, self.playing = True, True
-        self.actions = {"space": False, "left_key": False, "right_key": False}
+        self.actions = {"space": False, "left_key": False, "right_key": False, "up_key": False, "down_key": False}
         self.dt, self.prev_time = 0, 0
         self.display_reset = True
         self.resize_delay = 0
@@ -64,6 +64,10 @@ class Visualizer():
                         self.actions["left_key"] = True
                     if event.key == pygame.K_RIGHT:
                         self.actions["right_key"] = True
+                    if event.key == pygame.K_UP:
+                        self.actions["up_key"] = True
+                    if event.key == pygame.K_DOWN:
+                        self.actions["down_key"] = True
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_SPACE:
                     self.actions["space"] = False
@@ -71,6 +75,10 @@ class Visualizer():
                     self.actions["left_key"] = False
                 if event.key == pygame.K_RIGHT:
                     self.actions["right_key"] = False
+                if event.key == pygame.K_UP:
+                    self.actions["up_key"] = False
+                if event.key == pygame.K_DOWN:
+                    self.actions["down_key"] = False
 
     def update(self):
         self.state_stack[-1].update(self.dt, self.actions)
