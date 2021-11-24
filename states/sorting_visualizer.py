@@ -19,7 +19,7 @@ class SortingVisualizer(State):
         self.array_max_height = round(self.array_bottom / 2.2)
         self.delay = 50
         self.array_length = 200
-        self.array_modes = {"array_mode" : "random", "duplicates" : True}  # sort modes: "random" "nearly_sorted"
+        self.array_modes = {"array_mode" : "random", "duplicates" : False}  # sort modes: "random" "nearly_sorted"
         self.array_asc_order = True
         self.unsorted_amount = 10  # precentage
         self.reset_delay = 0
@@ -96,7 +96,7 @@ class Overlay:
 
 
     def update(self, actions):
-        after_click_delay = 1000
+        after_click_delay = 500
         button_change = False
         if pygame.time.get_ticks() > self.sorting_visualizer.delay_input:
             mouse_pos = pygame.mouse.get_pos()
@@ -115,6 +115,16 @@ class Overlay:
                         button_change = True
                         self.sorting_visualizer.array_modes["array_mode"] = "nearly_sorted"
                         self.sorting_visualizer.delay_input = pygame.time.get_ticks() + after_click_delay
+                    if self.array_mode_selection_minus.collidepoint(mouse_pos):
+                        if self.sorting_visualizer.unsorted_amount > 0:
+                            self.sorting_visualizer.unsorted_amount -= 2
+                        self.render_bool = True
+                        self.sorting_visualizer.delay_input = pygame.time.get_ticks() + 250
+                    if self.array_mode_selection_plus.collidepoint(mouse_pos):
+                        if self.sorting_visualizer.unsorted_amount < 30:
+                            self.sorting_visualizer.unsorted_amount += 2
+                        self.render_bool = True
+                        self.sorting_visualizer.delay_input = pygame.time.get_ticks() + 250
                 except:
                     print("No buttons yet!")
             if button_change:
@@ -140,15 +150,22 @@ class Overlay:
         array_length_pos_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.13)
         array_mode_pos_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.25)
         array_mode_pos_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.09)
-        array_mode_selection_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.38)
+        array_mode_selection1_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.38)
         array_mode_selection1_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.05)
+        array_mode_selection2_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.39)
         array_mode_selection2_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.13)
+        array_mode_selection_minus_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.37)
+        array_mode_selection_plus_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.41)
+        array_mode_selection_control_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.17)
+
 
         self.visualizer_manager.draw_text(display, (f"Speed: {self.sorting_visualizer.delay} < >"), config.overlay_text_color, start_stop_pos_x, start_stop_pos_y, "font_sorting_overlay")
         self.visualizer_manager.draw_text(display, (f"Length: {self.sorting_visualizer.array_length} /\ \/"), config.overlay_text_color, array_length_pos_x, array_length_pos_y, "font_sorting_overlay")
         self.visualizer_manager.draw_text(display, (f"Sort Modes:"), config.overlay_text_color, array_mode_pos_x, array_mode_pos_y, "font_sorting_overlay")
-        self.array_mode_selection1 = self.visualizer_manager.draw_text(display, (f"Random"), self.array_modes_colors["random"], array_mode_selection_x, array_mode_selection1_y, "font_sorting_overlay")
-        self.array_mode_selection2 = self.visualizer_manager.draw_text(display, (f"Nearly sorted"), self.array_modes_colors["nearly_sorted"], array_mode_selection_x, array_mode_selection2_y, "font_sorting_overlay")
+        self.array_mode_selection1 = self.visualizer_manager.draw_text(display, (f"Random"), self.array_modes_colors["random"], array_mode_selection1_x, array_mode_selection1_y, "font_sorting_overlay")
+        self.array_mode_selection2 = self.visualizer_manager.draw_text(display, (f"Nearly sorted: {self.sorting_visualizer.unsorted_amount}"), self.array_modes_colors["nearly_sorted"], array_mode_selection2_x, array_mode_selection2_y, "font_sorting_overlay")
+        self.array_mode_selection_minus = self.visualizer_manager.draw_text(display, (f"-"), config.overlay_text_color, array_mode_selection_minus_x, array_mode_selection_control_y, "font_sorting_overlay")
+        self.array_mode_selection_plus = self.visualizer_manager.draw_text(display, (f"+"), config.overlay_text_color, array_mode_selection_plus_x, array_mode_selection_control_y, "font_sorting_overlay")
 
     def screen_update(self, display, height_diff):
         self.overlay_height = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.20)
