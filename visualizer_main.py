@@ -20,39 +20,36 @@ class Visualizer():
         self.SCREEN_WIDTH, self.SCREEN_HEIGHT = config.SCREEN_WIDTH, config.SCREEN_HEIGHT
         self.WINDOW = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
         self.running, self.playing = True, True
-        self.actions = {"space": False, "left_key": False, "right_key": False, "up_key": False, "down_key": False, "left_mouse": False}
-        self.dt, self.prev_time = 0, 0
-        self.display_reset = True
-        self.resize_delay = 0
-        self.current_tick = 0
+        self.actions = {"space": False, "left_key": False, "right_key": False, "up_key": False, "down_key": False, "left_mouse": False}  # key input checking.
+        self.dt, self.prev_time = 0, 0  # delta time
+        self.display_reset = True  # signal to render entire display on the next frame
+        self.resize_delay = 0 
         self.state_stack = []
         self.load_states()
         self.delay_input = 0
 
-
+    # main game loop
     def visualizer_loop(self):
         while self.playing:
-            #clock.tick(60)
+            #clock.tick(60)  # untick to not burn cpu
             if self.resize_delay < pygame.time.get_ticks():
                 self.get_dt()
                 self.check_events()
                 self.update()
                 self.render()
 
-    def add_delay(self, delay=None):
-        self.resize_delay = delay + pygame.time.get_ticks()
-
+    #  check events and set actions dicts with resaults to check from other states
     def check_events(self):
         for event in pygame.event.get():
-            if event.type == pygame.VIDEORESIZE:
+            if event.type == pygame.VIDEORESIZE:  # refresh, resize everything and render the entire screen on resize
                 self.display_reset = True
                 old_height = self.SCREEN_HEIGHT
                 self.SCREEN_WIDTH, self.SCREEN_HEIGHT = event.size
                 self.WINDOW = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.RESIZABLE)
                 self.state_stack[-1].screen_update(self.WINDOW,((self.SCREEN_HEIGHT-old_height)/old_height)*100)
                 pygame.display.flip()
-            if event.type == pygame.WINDOWEXPOSED:
-                #self.display_reset = True
+            if event.type == pygame.WINDOWEXPOSED:  # render entire screen when unminimize (pygame(SDL?) bug)
+                self.display_reset = True
                 pass
             if event.type == pygame.QUIT:
                 self.playing = False
@@ -88,21 +85,23 @@ class Visualizer():
                 if event.button == 1:
                     self.actions["left_mouse"] = False
 
+    # update top state in stack
     def update(self):
         self.state_stack[-1].update(self.dt, self.actions)
 
     def render(self):
         self.state_stack[-1].render(self.WINDOW)
-        if self.display_reset:
+        if self.display_reset:  # check if entire display needs to be rendered due to changes
             pygame.display.flip()
             self.display_reset = False
-        pygame.display.update()
+        pygame.display.update(self.SCREEN_WIDTH *0.1, self.SCREEN_HEIGHT*0.4, self.SCREEN_WIDTH *0.8, self.SCREEN_HEIGHT*0.6)
 
     def get_dt(self):
         now = time.time()
         self.dt = now - self.prev_time
         self.prev_time = now
 
+    #  helper function for displaying text
     def draw_text(self, surface, text, color, x, y, font=None, scale=False):
         if not font or font == "font_squid":
             font = Visualizer.font_squid
@@ -117,11 +116,13 @@ class Visualizer():
         surface.blit(text_surface, text_rect)
         return text_rect
 
-    def load_states(self):
+    def load_assets(self):
         ft = pygame.font.Font
         self.font_table = {}
-        for i in range(0, 100):
+        for i in range(0, 100):  # create different font size for responsiveness
             self.font_table[i] = ft(self.font_sorting_overlay_dir, i)
+
+    def load_states(self):
         self.main_menu_screen = MainMenu(self)
         self.state_stack.append(self.main_menu_screen)
 
