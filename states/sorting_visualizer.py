@@ -2,56 +2,70 @@
 import pygame, os
 import random, math
 
+from pygame.draw import rect
+
 
 import config.config as config
 
 from states.state import State
 
+
+  # main sorting state
 class SortingVisualizer(State):
     def __init__(self, visualizer_manager):
         super().__init__(visualizer_manager)
         self.visualizer_manager = visualizer_manager
-        self.visualizer_manager.display_reset = True
+        self.visualizer_manager.display_reset = True  # change to true when need to refresh the entire display instead of the bar area
         self.array_bottom = config.SCREEN_HEIGHT
-        self.array_min_height = round(self.array_bottom / 1.2)
+        self.array_min_height = round(self.array_bottom / 1.2)  # bars min and max possible height
         self.array_max_height = round(self.array_bottom / 2.2)
-        self.delay = 50
-        self.array_length = 200
-        self.array_modes = {"sort_mode" : "random", "duplicates" : True}  # sort modes: "random" "nearly_sorted"
-        self.array_asc_order = True
-        self.unsorted_amount = 1  # precentage
-        self.reset_delay = 0
-        self.target_time = 0
+        self.array_length = 50  # bars amount
+        self.array_modes = {"array_mode" : "random", "duplicates" : True}  # sort modes: "random" "nearly_sorted"
+        self.array_asc_order = True  # IN PROGRESS
+        self.unsorted_amount = 10  # How many swaps for a nearly sorted list
+        self.reset_delay = 0  # delay for resetting array
+        self.reset_delay_time = 0  # delay check
+        self.delay = 50  # animation delay
+        self.target_time = 0  # delay check for animation
+        self.delay_input = 0  # delay check for key input
         self.sorting = False
-        self.delay_input = pygame.time.get_ticks()
         self.overlay = Overlay(self, visualizer_manager)
-        self.bubble_sort = BubbleSort(self, visualizer_manager, self.overlay)
+        self.bubble_sort = None
         self.sorting_background = pygame.image.load(os.path.join(config.assets_dir, "graphics", "background.jpg")).convert()
         
     
     def update(self, delta_time, actions):
+        if not self.sorting:  # init bubble sort if no sort going
+            self.bubble_sort = BubbleSort(self, self.visualizer_manager, self.overlay)
         if pygame.time.get_ticks() > self.delay_input:
-            self.delay_input = pygame.time.get_ticks() + 30
             if actions["left_key"]:
                 if self.delay > 0:
                     self.delay -= 1
                     self.overlay.render_bool = True
+                    self.delay_input = pygame.time.get_ticks() + 30
             if actions["right_key"]:
                 if self.delay < 150:
                     self.delay += 1
                     self.overlay.render_bool = True
+                    self.delay_input = pygame.time.get_ticks() + 30
             if actions["down_key"]:
                 if self.array_length > 10:
                     self.array_length -= 2
                     self.overlay.render_bool = True
+                    self.delay_input = pygame.time.get_ticks() + 30
             if actions["up_key"]:
                 if self.array_length < 250:
                     self.array_length += 2
                     self.overlay.render_bool = True
-            if actions["space"]:
-                self.add_delay(200, self.reset_delay)
-                self.bubble_sort.reset_loop()
-        self.bubble_sort.update()
+                    self.delay_input = pygame.time.get_ticks() + 30
+        if actions["space"]:  # different delay time
+            if pygame.time.get_ticks() > self.reset_delay_time:
+                self.reset_delay_time = pygame.time.get_ticks() + self.reset_delay
+                if self.bubble_sort:
+                    self.bubble_sort.reset_loop()
+        self.overlay.update(actions)
+        if self.bubble_sort:
+            self.bubble_sort.update()
         
 
     def render(self, display):
@@ -62,7 +76,8 @@ class SortingVisualizer(State):
             self.overlay.render_bool = False
             self.visualizer_manager.display_reset = True
             self.overlay.render(display)
-        self.bubble_sort.render(display)
+        if self.bubble_sort:
+            self.bubble_sort.render(display)
 
     def add_delay(self, delay=None, delay_type=None):
         if delay == None: delay = self.sorting_visualizer.delay
@@ -71,7 +86,8 @@ class SortingVisualizer(State):
 
     def screen_update(self, display, height_diff):
         self.overlay.screen_update(display, height_diff)
-        self.bubble_sort.screen_update(display, height_diff)
+        if self.bubble_sort:
+            self.bubble_sort.screen_update(display, height_diff)
 
 
 class Overlay:
@@ -83,15 +99,79 @@ class Overlay:
         self.overlay_height = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.20)
         self.box_height = math.floor(self.overlay_height * 0.4 )
         self.box_width = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.10)
+        self.array_modes = ["random", "nearly_sorted"]
+        self.array_modes_colors = {"random":config.overlay_text_selected, "nearly_sorted":config.overlay_text_color}
+        self.array_mode_selected = 0  # 0 for random, 1 for nearly_sorted
+        self.duplicates_modes = ["true", "false"]
+        self.duplicates_modes_colors = {"true":config.overlay_text_selected, "false":config.overlay_text_color}
+        self.duplicates_mode_selected = 0  # 0 for True, 1 for False
 
 
-    def update(self):
-        pass
+    def update(self, actions):
+        after_click_delay = 500
+        array_mode_button_change = False
+        array_duplicates_button_change = False
+        if pygame.time.get_ticks() > self.sorting_visualizer.delay_input:
+            mouse_pos = pygame.mouse.get_pos()
+            if actions["left_mouse"]:
+                actions["left_mouse"] = False
+                try:
+                    if self.array_mode_selection1.collidepoint(mouse_pos):
+                        self.array_mode_selected = 0
+                        self.render_bool = True
+                        array_mode_button_change = True
+                        self.sorting_visualizer.array_modes["array_mode"] = "random"
+                        self.sorting_visualizer.delay_input = pygame.time.get_ticks() + after_click_delay
+                    if self.array_mode_selection2.collidepoint(mouse_pos):
+                        self.array_mode_selected = 1
+                        self.render_bool = True
+                        array_mode_button_change = True
+                        self.sorting_visualizer.array_modes["array_mode"] = "nearly_sorted"
+                        self.sorting_visualizer.delay_input = pygame.time.get_ticks() + after_click_delay
+                    if self.array_mode_selection_minus.collidepoint(mouse_pos):
+                        if self.sorting_visualizer.unsorted_amount > 0:
+                            self.sorting_visualizer.unsorted_amount -= 2
+                        self.render_bool = True
+                        self.sorting_visualizer.delay_input = pygame.time.get_ticks() + 250
+                    if self.array_mode_selection_plus.collidepoint(mouse_pos):
+                        if self.sorting_visualizer.unsorted_amount < 30:
+                            self.sorting_visualizer.unsorted_amount += 2
+                        self.render_bool = True
+                        self.sorting_visualizer.delay_input = pygame.time.get_ticks() + 250
+                    if self.array_duplicates_selection1.collidepoint(mouse_pos):
+                        self.duplicates_mode_selected = 0
+                        self.render_bool = True
+                        array_duplicates_button_change = True
+                        self.sorting_visualizer.array_modes["duplicates"] = True
+                        self.sorting_visualizer.delay_input = pygame.time.get_ticks() + after_click_delay
+                    if self.array_duplicates_selection2.collidepoint(mouse_pos):
+                        self.duplicates_mode_selected = 1
+                        self.render_bool = True
+                        array_duplicates_button_change = True
+                        self.sorting_visualizer.array_modes["duplicates"] = False
+                        self.sorting_visualizer.delay_input = pygame.time.get_ticks() + after_click_delay
+                except:
+                    print("No buttons yet!")
+            if array_mode_button_change:
+                array_mode_button_change = False
+                for i in range(len(self.array_modes_colors)):
+                    if i == self.array_mode_selected:
+                        self.array_modes_colors[self.array_modes[i]] = config.overlay_text_selected
+                    else:
+                        self.array_modes_colors[self.array_modes[i]] = config.overlay_text_color
+            if array_duplicates_button_change:
+                array_duplicates_button_change = False
+                for i in range(len(self.duplicates_modes_colors)):
+                    if i == self.duplicates_mode_selected:
+                        self.duplicates_modes_colors[self.duplicates_modes[i]] = config.overlay_text_selected
+                    else:
+                        self.duplicates_modes_colors[self.duplicates_modes[i]] = config.overlay_text_color
+
+
 
     def render(self, display):
         self.overlay_rect = pygame.draw.rect(display, config.overlay_color, (0, 0, self.visualizer_manager.SCREEN_WIDTH, self.overlay_height))
         self.render_text(display)
-        
         #pygame.draw.rect(display, config.overlay_color, (0, 0, self.visualizer_manager.SCREEN_WIDTH, self.overlay_height))
 
     def render_text(self,display):
@@ -99,12 +179,35 @@ class Overlay:
         #    display.blit(self.sorting_visualizer.sorting_background, (self.prev_text.x, self.prev_text.y), self.prev_text)
         start_stop_pos_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.08)
         start_stop_pos_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.04)
-        array_length_pos_x = start_stop_pos_x
+        array_length_pos_x = start_stop_pos_x + 10
         array_length_pos_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.13)
+        array_mode_pos_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.25)
+        array_mode_pos_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.09)
+        array_mode_selection1_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.38)
+        array_mode_selection1_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.05)
+        array_mode_selection2_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.39)
+        array_mode_selection2_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.13)
+        array_mode_selection_minus_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.37)
+        array_mode_selection_plus_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.41)
+        array_mode_selection_control_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.17)
+        array_duplicates_pos_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.53)
+        array_duplicates_pos_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.09)
+        array_duplicates_selection1_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.625)
+        array_duplicates_selection1_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.05)
+        array_duplicates_selection2_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.63)
+        array_duplicates_selection2_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.14)
 
-        self.visualizer_manager.draw_text(display, (f"Speed: {self.sorting_visualizer.delay} :"), config.overlay_text_color, start_stop_pos_x, start_stop_pos_y, "font_sorting_overlay")
-        self.visualizer_manager.draw_text(display, (f"Length: {self.sorting_visualizer.array_length} :"), config.overlay_text_color, array_length_pos_x, array_length_pos_y, "font_sorting_overlay")
-        self.visualizer_manager.draw_text(display, "USE: <><><>", (69,69,69), self.visualizer_manager.SCREEN_WIDTH/2, self.visualizer_manager.SCREEN_HEIGHT/2 -200)
+
+        self.visualizer_manager.draw_text(display, (f"Speed: {self.sorting_visualizer.delay} < >"), config.overlay_text_color, start_stop_pos_x, start_stop_pos_y, "font_sorting_overlay")
+        self.visualizer_manager.draw_text(display, (f"Length: {self.sorting_visualizer.array_length} /\ \/"), config.overlay_text_color, array_length_pos_x, array_length_pos_y, "font_sorting_overlay")
+        self.visualizer_manager.draw_text(display, (f"Sort Modes:"), config.overlay_text_color, array_mode_pos_x, array_mode_pos_y, "font_sorting_overlay")
+        self.array_mode_selection1 = self.visualizer_manager.draw_text(display, (f"Random"), self.array_modes_colors["random"], array_mode_selection1_x, array_mode_selection1_y, "font_sorting_overlay")
+        self.array_mode_selection2 = self.visualizer_manager.draw_text(display, (f"Nearly sorted: {self.sorting_visualizer.unsorted_amount}"), self.array_modes_colors["nearly_sorted"], array_mode_selection2_x, array_mode_selection2_y, "font_sorting_overlay")
+        self.array_mode_selection_minus = self.visualizer_manager.draw_text(display, (f"-"), config.overlay_text_color, array_mode_selection_minus_x, array_mode_selection_control_y, "font_sorting_overlay")
+        self.array_mode_selection_plus = self.visualizer_manager.draw_text(display, (f"+"), config.overlay_text_color, array_mode_selection_plus_x, array_mode_selection_control_y, "font_sorting_overlay")
+        self.visualizer_manager.draw_text(display, (f"Duplicates:"), config.overlay_text_color, array_duplicates_pos_x, array_duplicates_pos_y, "font_sorting_overlay")
+        self.array_duplicates_selection1 = self.visualizer_manager.draw_text(display, (f"True"), self.duplicates_modes_colors["true"], array_duplicates_selection1_x, array_duplicates_selection1_y, "font_sorting_overlay")
+        self.array_duplicates_selection2 = self.visualizer_manager.draw_text(display, (f"False"), self.duplicates_modes_colors["false"], array_duplicates_selection2_x, array_duplicates_selection2_y, "font_sorting_overlay")
 
     def screen_update(self, display, height_diff):
         self.overlay_height = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.20)
@@ -176,7 +279,6 @@ class BubbleSort:
     def reset_loop(self):
         self.current_action = None
         self.sorting_visualizer.sorting = False
-        self.generate_bars()
         self.i = 0
         self.j = 0
 
@@ -194,7 +296,7 @@ class BubbleSort:
                     self.numbers.append(i)
                     i += height_gap
                 random.shuffle(self.numbers)
-            if self.sorting_visualizer.array_modes["sort_mode"] == "nearly_sorted":
+            if self.sorting_visualizer.array_modes["array_mode"] == "nearly_sorted":
                 unsorted_amount = math.ceil(self.sorting_visualizer.unsorted_amount/100 * self.sorting_visualizer.array_length)
                 self.numbers.sort(reverse=self.sorting_visualizer.array_asc_order)
                 for i in range(unsorted_amount):
