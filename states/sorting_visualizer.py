@@ -9,29 +9,34 @@ import config.config as config
 
 from states.state import State
 
+
+  # main sorting state
 class SortingVisualizer(State):
     def __init__(self, visualizer_manager):
         super().__init__(visualizer_manager)
         self.visualizer_manager = visualizer_manager
-        self.visualizer_manager.display_reset = True
+        self.visualizer_manager.display_reset = True  # change to true when need to refresh the entire display instead of the bar area
         self.array_bottom = config.SCREEN_HEIGHT
-        self.array_min_height = round(self.array_bottom / 1.2)
+        self.array_min_height = round(self.array_bottom / 1.2)  # bars min and max possible height
         self.array_max_height = round(self.array_bottom / 2.2)
-        self.delay = 50
-        self.array_length = 200
-        self.array_modes = {"array_mode" : "random", "duplicates" : False}  # sort modes: "random" "nearly_sorted"
-        self.array_asc_order = True
-        self.unsorted_amount = 10  # precentage
-        self.reset_delay = 0
-        self.target_time = 0
+        self.array_length = 50  # bars amount
+        self.array_modes = {"array_mode" : "random", "duplicates" : True}  # sort modes: "random" "nearly_sorted"
+        self.array_asc_order = True  # IN PROGRESS
+        self.unsorted_amount = 10  # How many swaps for a nearly sorted list
+        self.reset_delay = 0  # delay for resetting array
+        self.reset_delay_time = 0  # delay check
+        self.delay = 50  # animation delay
+        self.target_time = 0  # delay check for animation
+        self.delay_input = 0  # delay check for key input
         self.sorting = False
-        self.delay_input = pygame.time.get_ticks()
         self.overlay = Overlay(self, visualizer_manager)
-        self.bubble_sort = BubbleSort(self, visualizer_manager, self.overlay)
+        self.bubble_sort = None
         self.sorting_background = pygame.image.load(os.path.join(config.assets_dir, "graphics", "background.jpg")).convert()
         
     
     def update(self, delta_time, actions):
+        if not self.sorting:  # init bubble sort if no sort going
+            self.bubble_sort = BubbleSort(self, self.visualizer_manager, self.overlay)
         if pygame.time.get_ticks() > self.delay_input:
             if actions["left_key"]:
                 if self.delay > 0:
@@ -53,12 +58,14 @@ class SortingVisualizer(State):
                     self.array_length += 2
                     self.overlay.render_bool = True
                     self.delay_input = pygame.time.get_ticks() + 30
-            if actions["space"]:
-                self.add_delay(200, self.reset_delay)
-                self.bubble_sort.reset_loop()
-                self.delay_input = pygame.time.get_ticks() + 30
+        if actions["space"]:  # different delay time
+            if pygame.time.get_ticks() > self.reset_delay_time:
+                self.reset_delay_time = pygame.time.get_ticks() + self.reset_delay
+                if self.bubble_sort:
+                    self.bubble_sort.reset_loop()
         self.overlay.update(actions)
-        self.bubble_sort.update()
+        if self.bubble_sort:
+            self.bubble_sort.update()
         
 
     def render(self, display):
@@ -69,7 +76,8 @@ class SortingVisualizer(State):
             self.overlay.render_bool = False
             self.visualizer_manager.display_reset = True
             self.overlay.render(display)
-        self.bubble_sort.render(display)
+        if self.bubble_sort:
+            self.bubble_sort.render(display)
 
     def add_delay(self, delay=None, delay_type=None):
         if delay == None: delay = self.sorting_visualizer.delay
@@ -78,7 +86,8 @@ class SortingVisualizer(State):
 
     def screen_update(self, display, height_diff):
         self.overlay.screen_update(display, height_diff)
-        self.bubble_sort.screen_update(display, height_diff)
+        if self.bubble_sort:
+            self.bubble_sort.screen_update(display, height_diff)
 
 
 class Overlay:
@@ -270,7 +279,6 @@ class BubbleSort:
     def reset_loop(self):
         self.current_action = None
         self.sorting_visualizer.sorting = False
-        self.generate_bars()
         self.i = 0
         self.j = 0
 
