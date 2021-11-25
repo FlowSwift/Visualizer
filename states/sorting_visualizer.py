@@ -32,7 +32,7 @@ class SortingVisualizer(State):
         self.bubble_sort = None #BubbleSort(self, self.visualizer_manager, self.overlay)
         self.sorting_background = pygame.image.load(os.path.join(config.assets_dir, "graphics", "background.jpg")).convert()
         
-    
+    # check and update changes
     def update(self, delta_time, actions):
         if not self.sorting:  # init if no sort going
             self.bubble_sort = BubbleSort(self, self.visualizer_manager, self.overlay)
@@ -68,7 +68,7 @@ class SortingVisualizer(State):
         if self.bubble_sort:
             self.bubble_sort.update()
         
-
+    # check if needed and render changes on screen
     def render(self, display):
         if not self.sorting:
             display.blit(self.sorting_background, (0,0))
@@ -82,6 +82,7 @@ class SortingVisualizer(State):
         if self.bubble_sort:
             self.bubble_sort.render(display)
 
+    # called when the screen is resized
     def screen_update(self, display, height_diff):
         self.overlay.screen_update(display, height_diff)
         if self.bubble_sort:
@@ -92,50 +93,49 @@ class Overlay:
     def __init__(self, sorting_visualizer, visualizer_manager):
         self.sorting_visualizer = sorting_visualizer
         self.visualizer_manager = visualizer_manager
-        self.prev_text = None
-        self.render_bool = True
+        self.render_bool = True # check if overlay was changed
         self.overlay_height = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.20)
-        self.box_height = math.floor(self.overlay_height * 0.4 )
-        self.box_width = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.10)
-        self.array_modes = ["random", "nearly_sorted"]
-        self.array_modes_colors = {"random":config.overlay_text_selected, "nearly_sorted":config.overlay_text_color}
+        self.array_modes = ["random", "nearly_sorted"]  # used to set selection colors
+        self.array_modes_colors = {"random":config.overlay_text_selected, "nearly_sorted":config.overlay_text_color}  # current colors of the modes selection
         self.array_mode_selected = 0  # 0 for random, 1 for nearly_sorted
-        self.duplicates_modes = ["true", "false"]
-        self.duplicates_modes_colors = {"true":config.overlay_text_selected, "false":config.overlay_text_color}
+        self.duplicates_modes = ["true", "false"]  # used to set selection colors
+        self.duplicates_modes_colors = {"true":config.overlay_text_selected, "false":config.overlay_text_color}  # current colors of the modes selection
         self.duplicates_mode_selected = 0  # 0 for True, 1 for False
 
 
     def update(self, actions):
-        after_click_delay = 500
+        after_click_delay = 500  # clicking timeout
+        mouse_hold_delay = 200
         array_mode_button_change = False
         array_duplicates_button_change = False
+        # check mouse inputs and add delay
         if pygame.time.get_ticks() > self.sorting_visualizer.delay_input:
             mouse_pos = pygame.mouse.get_pos()
             if actions["left_mouse"]:
-                actions["left_mouse"] = False
+                
                 try:
                     if self.array_mode_selection1.collidepoint(mouse_pos):
                         self.array_mode_selected = 0
                         self.render_bool = True
                         array_mode_button_change = True
-                        self.sorting_visualizer.array_modes["array_mode"] = "random"
+                        self.sorting_visualizer.array_modes["array_mode"] = "random"  # change the mode in sorting_visualizer instance
                         self.sorting_visualizer.delay_input = pygame.time.get_ticks() + after_click_delay
                     if self.array_mode_selection2.collidepoint(mouse_pos):
                         self.array_mode_selected = 1
                         self.render_bool = True
                         array_mode_button_change = True
-                        self.sorting_visualizer.array_modes["array_mode"] = "nearly_sorted"
+                        self.sorting_visualizer.array_modes["array_mode"] = "nearly_sorted"  # change the mode in sorting_visualizer instance
                         self.sorting_visualizer.delay_input = pygame.time.get_ticks() + after_click_delay
                     if self.array_mode_selection_minus.collidepoint(mouse_pos):
                         if self.sorting_visualizer.unsorted_amount > 0:
                             self.sorting_visualizer.unsorted_amount -= 2
                         self.render_bool = True
-                        self.sorting_visualizer.delay_input = pygame.time.get_ticks() + 250
+                        self.sorting_visualizer.delay_input = pygame.time.get_ticks() + mouse_hold_delay
                     if self.array_mode_selection_plus.collidepoint(mouse_pos):
                         if self.sorting_visualizer.unsorted_amount < 30:
                             self.sorting_visualizer.unsorted_amount += 2
                         self.render_bool = True
-                        self.sorting_visualizer.delay_input = pygame.time.get_ticks() + 250
+                        self.sorting_visualizer.delay_input = pygame.time.get_ticks() + mouse_hold_delay
                     if self.array_duplicates_selection1.collidepoint(mouse_pos):
                         self.duplicates_mode_selected = 0
                         self.render_bool = True
@@ -150,20 +150,18 @@ class Overlay:
                         self.sorting_visualizer.delay_input = pygame.time.get_ticks() + after_click_delay
                 except:
                     print("No buttons yet!")
-            if array_mode_button_change:
-                array_mode_button_change = False
-                for i in range(len(self.array_modes_colors)):
-                    if i == self.array_mode_selected:
-                        self.array_modes_colors[self.array_modes[i]] = config.overlay_text_selected
-                    else:
-                        self.array_modes_colors[self.array_modes[i]] = config.overlay_text_color
-            if array_duplicates_button_change:
-                array_duplicates_button_change = False
-                for i in range(len(self.duplicates_modes_colors)):
-                    if i == self.duplicates_mode_selected:
-                        self.duplicates_modes_colors[self.duplicates_modes[i]] = config.overlay_text_selected
-                    else:
-                        self.duplicates_modes_colors[self.duplicates_modes[i]] = config.overlay_text_color
+            self.mode_change(array_mode_button_change, self.array_modes, self.array_mode_selected, self.array_modes_colors)
+            self.mode_change(array_duplicates_button_change, self.duplicates_modes, self.duplicates_mode_selected, self.duplicates_modes_colors)
+            
+
+    def mode_change(self, button_change, modes, selected, colors):
+        if button_change:
+            for i in range(len(modes)):
+                if i == selected:
+                    colors[modes[i]] = config.overlay_text_selected
+                else:
+                    colors[modes[i]] = config.overlay_text_color
+
 
 
 
@@ -209,8 +207,6 @@ class Overlay:
 
     def screen_update(self, display, height_diff):
         self.overlay_height = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.20)
-        self.box_height = math.floor(self.overlay_height * 0.4 )
-        self.box_width = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.10)
         self.render(display)
 
     def render_overlay(self, display):
