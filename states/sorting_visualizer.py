@@ -26,17 +26,17 @@ class SortingVisualizer(State):
         self.reset_delay = 0  # delay for resetting array
         self.reset_delay_time = 0  # delay check
         self.delay = 50  # animation delay
-        self.target_time = 0  # delay check for animation
         self.delay_input = 0  # delay check for key input
         self.sorting = False
         self.overlay = Overlay(self, visualizer_manager)
-        self.bubble_sort = None
+        self.bubble_sort = None #BubbleSort(self, self.visualizer_manager, self.overlay)
         self.sorting_background = pygame.image.load(os.path.join(config.assets_dir, "graphics", "background.jpg")).convert()
         
     
     def update(self, delta_time, actions):
-        if not self.sorting:  # init bubble sort if no sort going
+        if not self.sorting:  # init if no sort going
             self.bubble_sort = BubbleSort(self, self.visualizer_manager, self.overlay)
+        # check for key inputs if not on timeout.
         if pygame.time.get_ticks() > self.delay_input:
             if actions["left_key"]:
                 if self.delay > 0:
@@ -64,6 +64,7 @@ class SortingVisualizer(State):
                 if self.bubble_sort:
                     self.bubble_sort.reset_loop()
         self.overlay.update(actions)
+        # check what sort selected and update
         if self.bubble_sort:
             self.bubble_sort.update()
         
@@ -72,17 +73,14 @@ class SortingVisualizer(State):
         if not self.sorting:
             display.blit(self.sorting_background, (0,0))
             self.overlay.render_bool = True
+        # check if something requires a full render of the screen using render_bool and send signal to the visualizer_main state using display_reset
         if self.overlay.render_bool:
             self.overlay.render_bool = False
             self.visualizer_manager.display_reset = True
             self.overlay.render(display)
+        # check what sort selected and render
         if self.bubble_sort:
             self.bubble_sort.render(display)
-
-    def add_delay(self, delay=None, delay_type=None):
-        if delay == None: delay = self.sorting_visualizer.delay
-        if not delay_type: delay_type = self.target_time
-        self.target_time = delay + pygame.time.get_ticks()
 
     def screen_update(self, display, height_diff):
         self.overlay.screen_update(display, height_diff)
@@ -230,13 +228,14 @@ class BubbleSort:
         self.current_action = "compare"
         self.action_stage = 0
         self.complex_visualize = False
+        self.target_time = 0  # delay check for animation
         self.i = 0
         self.j = 0
         self.initilize = False
         self.next = False
 
     def update(self):
-        if self.bars_array and pygame.time.get_ticks() >= self.sorting_visualizer.target_time:
+        if self.bars_array and pygame.time.get_ticks() >= self.target_time:
             if self.next:
                 self.current_action = None
                 self.j+=1
@@ -245,7 +244,7 @@ class BubbleSort:
                 if self.j < (len(self.bars_array) - 1 - self.i):
                     if self.current_action == "compare" or not self.current_action:
                         self.bars_color[self.j], self.bars_color[self.j+1] = config.bars_compared_color,config.bars_compared_color
-                        self.sorting_visualizer.add_delay(self.sorting_visualizer.delay)
+                        self.target_time = pygame.time.get_ticks() + (self.sorting_visualizer.delay)
                         if self.bars_array[self.j].y < self.bars_array[self.j+1].y:  
                             self.current_action = "swap"
                         else:
@@ -255,7 +254,7 @@ class BubbleSort:
                         if self.action_stage == 0:
                             self.bars_color[self.j], self.bars_color[self.j+1] = config.bars_swap_color, config.bars_swap_color
                             self.action_stage += 1
-                            self.sorting_visualizer.add_delay(self.sorting_visualizer.delay*3)
+                            self.target_time = pygame.time.get_ticks() + (self.sorting_visualizer.delay*3)
                         elif self.action_stage == 1:
                             self.bars_color[self.j], self.bars_color[self.j+1] = config.bars_swapped_color, config.bars_swapped_color
                             self.before_swap[0], self.before_swap[1] = self.bars_array[self.j], self.bars_array[self.j+1]
@@ -263,7 +262,7 @@ class BubbleSort:
                             self.bars_array[self.j].y, self.bars_array[self.j+1].y = self.bars_array[self.j+1].y, self.bars_array[self.j].y
                             self.current_action = "clear"
                             self.action_stage = 0
-                            self.sorting_visualizer.add_delay(self.sorting_visualizer.delay*3)
+                            self.target_time = pygame.time.get_ticks() + (self.sorting_visualizer.delay*3)
                     elif self.current_action == "clear":
                         self.bars_color[self.j], self.bars_color[self.j+1] = config.bars_color, config.bars_color
                         self.next = True
