@@ -224,19 +224,21 @@ class BubbleSort:
         self.action_stage = 0
         self.complex_visualize = False
         self.target_time = 0  # delay check for animation
-        self.i = 0
-        self.j = 0
-        self.initilize = False
-        self.next = False
+        self.i = 0  # bubble main loop
+        self.j = 0  # bubble inner loop
+        self.next = False  # move to next iteration
 
+    #  bubble has 3 stages for the animation. 1st. comparing color. 2nd. unsorted(< or >) color. 3rd. after swap color
     def update(self):
-        if self.sorting_visualizer.bars_array and pygame.time.get_ticks() >= self.target_time:
-            if self.next:
+        if self.sorting_visualizer.bars_array and pygame.time.get_ticks() >= self.target_time:  # check animation delay
+            if self.next:  # move to next iteration
                 self.current_action = None
                 self.j+=1
                 self.next = False
+            # "artificial" bubble loop
             if self.i < len(self.sorting_visualizer.bars_array):
                 if self.j < (len(self.sorting_visualizer.bars_array) - 1 - self.i):
+                    # check if comparing and change the bar pair color to compre color. if next number < or > then depending on sort, set to swap action, otherwise set to clear
                     if self.current_action == "compare" or not self.current_action:
                         self.sorting_visualizer.bars_color[self.j], self.sorting_visualizer.bars_color[self.j+1] = config.bars_compared_color,config.bars_compared_color
                         self.target_time = pygame.time.get_ticks() + (self.sorting_visualizer.delay)
@@ -244,13 +246,14 @@ class BubbleSort:
                             self.current_action = "swap"
                         else:
                             self.current_action = "clear"
+                    # if actions is swap, set new color for the pair before swapping for stage 0 
                     elif self.current_action == "swap":
                         self.swapped = True
                         if self.action_stage == 0:
                             self.sorting_visualizer.bars_color[self.j], self.sorting_visualizer.bars_color[self.j+1] = config.bars_swap_color, config.bars_swap_color
                             self.action_stage += 1
                             self.target_time = pygame.time.get_ticks() + (self.sorting_visualizer.delay*3)
-                        elif self.action_stage == 1:
+                        elif self.action_stage == 1:  # if stage 1, change to after swap color and save old bars for removing in render()
                             self.sorting_visualizer.bars_color[self.j], self.sorting_visualizer.bars_color[self.j+1] = config.bars_swapped_color, config.bars_swapped_color
                             self.before_swap[0], self.before_swap[1] = self.sorting_visualizer.bars_array[self.j], self.sorting_visualizer.bars_array[self.j+1]
                             self.sorting_visualizer.bars_array[self.j].height, self.sorting_visualizer.bars_array[self.j+1].height = self.sorting_visualizer.bars_array[self.j+1].height, self.sorting_visualizer.bars_array[self.j].height  # get start and ending position of self.sorting_visualizer.bars_array
@@ -258,10 +261,10 @@ class BubbleSort:
                             self.current_action = "clear"
                             self.action_stage = 0
                             self.target_time = pygame.time.get_ticks() + (self.sorting_visualizer.delay*3)
-                    elif self.current_action == "clear":
+                    elif self.current_action == "clear":  # restore bar colors to original color
                         self.sorting_visualizer.bars_color[self.j], self.sorting_visualizer.bars_color[self.j+1] = config.bars_color, config.bars_color
                         self.next = True
-                else:
+                else:  # once over array length for the inner loop, "add" iteration. also check if there was a swap, if no swap happened, list is sorted
                     self.j = 0
                     self.i += 1
                     if not self.swapped:
@@ -276,13 +279,14 @@ class BubbleSort:
         self.i = 0
         self.j = 0
 
+    # generate bars based on the options from main class
     def generate_bars(self):
         self.sorting_visualizer.bars_array = []
-        self.sorting_visualizer.bars_color = [config.bars_color for i in range(self.sorting_visualizer.array_length)]
+        self.sorting_visualizer.bars_color = [config.bars_color for i in range(self.sorting_visualizer.array_length)]  # add the default color for all the bars
         if not self.sorting_visualizer.bars_array or self.sorting_visualizer.sorting == False:
-            if self.sorting_visualizer.array_modes["duplicates"]:
+            if self.sorting_visualizer.array_modes["duplicates"]:  # creates a random array with duplicates
                 self.numbers = [random.randrange(self.sorting_visualizer.array_max_height, self.sorting_visualizer.array_min_height) for i in range(self.sorting_visualizer.array_length)]
-            else: 
+            else:  # creates a non duplicates array based on the min and max array height. bigger gaps for smaller arrrays
                 height_gap = round((self.sorting_visualizer.array_min_height - self.sorting_visualizer.array_max_height)/self.sorting_visualizer.array_length)
                 self.numbers = []
                 i = self.sorting_visualizer.array_max_height
@@ -290,6 +294,7 @@ class BubbleSort:
                     self.numbers.append(i)
                     i += height_gap
                 random.shuffle(self.numbers)
+            # check if nearly_sorted mode is on, sort the list then "mess" it depending on unsorted_amount from main class
             if self.sorting_visualizer.array_modes["array_mode"] == "nearly_sorted":
                 unsorted_amount = math.ceil(self.sorting_visualizer.unsorted_amount/100 * self.sorting_visualizer.array_length)
                 self.numbers.sort(reverse=self.sorting_visualizer.array_asc_order)
@@ -298,8 +303,9 @@ class BubbleSort:
                     random_num2 = random.randrange(random_num1-3, random_num1+4)
                     self.numbers[random_num1], self.numbers[random_num2] = self.numbers[random_num2], self.numbers[random_num1]
 
+    # draw and generate bars based on screen size
     def draw_bars(self, display, height_diff=0):
-        bars_area = self.visualizer_manager.SCREEN_WIDTH * 0.8
+        bars_area = self.visualizer_manager.SCREEN_WIDTH * 0.8  # bars will always be inside this area
         bars_width =  round((bars_area * 0.7) / self.sorting_visualizer.array_length)
         bars_gap = math.ceil((bars_area * 0.3) / self.sorting_visualizer.array_length - 1)
         start_pos = round((self.visualizer_manager.SCREEN_WIDTH - ((bars_gap * (self.sorting_visualizer.array_length - 1)) + (bars_width * self.sorting_visualizer.array_length)))/2)
@@ -309,7 +315,7 @@ class BubbleSort:
             self.sorting_visualizer.bars_array.append(pygame.draw.rect(display, self.sorting_visualizer.bars_color[i], (start_pos, self.numbers[i], bars_width, self.sorting_visualizer.array_bottom - self.numbers[i])))  # rect
             start_pos += bars_gap + bars_width
 
-
+    # remove a bar by blitting the background in the size of the bar(max height of the bar) on the bar
     def remove_bar(self, display, bar):
         display.blit(self.sorting_visualizer.sorting_background, (bar.x, bar.y), bar)
 
@@ -323,11 +329,11 @@ class BubbleSort:
             self.remove_bar(display, img_cover_bar2)
             pygame.draw.rect(display, self.sorting_visualizer.bars_color[self.j], self.sorting_visualizer.bars_array[self.j])
             pygame.draw.rect(display, self.sorting_visualizer.bars_color[self.j+1], self.sorting_visualizer.bars_array[self.j+1])
-        else:
+        else:  # if not sorting, draw bars and and start sorting
             self.sorting_visualizer.sorting = True
-            
             self.draw_bars(display)
 
+    # called when the screen is resized
     def screen_update(self, display, height_diff):
         display.blit(self.sorting_visualizer.sorting_background, (0,0))
         self.overlay.render_text(display)
