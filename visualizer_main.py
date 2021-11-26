@@ -25,6 +25,7 @@ class Visualizer():
         self.display_reset = True  # signal to render entire display on the next frame
         self.resize_delay = 0 
         self.state_stack = []
+        self.load_assets()
         self.load_states()
         self.delay_input = 0
 

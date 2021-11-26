@@ -3,6 +3,7 @@ import pygame
 
   # screen resolution
 SCREEN_WIDTH, SCREEN_HEIGHT = 848, 480
+#replit 818, 418
 
   # overlay_settings
 overlay_color = "cyan"
