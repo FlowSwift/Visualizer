@@ -15,6 +15,7 @@ bars_color = "red"
 bars_compared_color = (96, 175, 255) #(87, 143, 199)
 bars_swap_color = (0, 112, 224)
 bars_swapped_color = (239, 210, 141)
+bars_lowest_num_color = "green"
 
 
   # ASSETS DIR
