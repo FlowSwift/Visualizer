@@ -13,9 +13,12 @@ class SelectionSort:
         self.smallest_num_index = 0
         self.last_smallest_num_index = 0  # used for render
         self.swapped = False
+        self.new_lowest_delay = self.sorting_visualizer.delay * 8
+        self.new_lowest_target_time = 0
+        self.new_lowest_delay_check = False
 
     def update(self):
-        if self.sorting_visualizer.sorting and pygame.time.get_ticks() >= self.sorting_visualizer.target_time:  # check animation delay
+        if self.sorting_visualizer.sorting and pygame.time.get_ticks() >= self.sorting_visualizer.target_time and (pygame.time.get_ticks() >= self.new_lowest_target_time or not self.new_lowest_delay_check):  # check animation delay
             if self.next:  # move to next iteration (used after render executed the last loop animation) 
                 self.current_action = "compare"
                 self.j += 1
@@ -29,10 +32,11 @@ class SelectionSort:
                             self.sorting_visualizer.bars_color[self.j] = config.bars_lowest_num_color  # set the smallest bar so far color
                             self.last_smallest_num_index = self.smallest_num_index  # save the last smallest bar to repaint to original color in render
                             self.smallest_num_index = self.j
+                            self.new_lowest_target_time = pygame.time.get_ticks() + (self.new_lowest_delay)
                         else:
                             self.sorting_visualizer.bars_color[self.j] = config.bars_compared_color  # show comparison if no new smallest num
+                            self.sorting_visualizer.target_time = pygame.time.get_ticks() + (self.sorting_visualizer.delay)  # animation delay
                         self.current_action = "clear"
-                        self.sorting_visualizer.target_time = pygame.time.get_ticks() + (self.sorting_visualizer.delay)  # animation delay
                     elif self.current_action == "clear":  # after comparison animation, clear but dont show (no delay)
                         if self.j != self.smallest_num_index: self.sorting_visualizer.bars_color[self.j] = config.bars_color
                         self.next = True  # move to next iteration after render
