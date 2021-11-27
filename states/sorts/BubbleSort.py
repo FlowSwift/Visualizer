@@ -16,7 +16,7 @@ class BubbleSort:
     #  bubble has 3 stages for the animation. 1st. comparing color. 2nd. unsorted(< or >) color. 3rd. after swap color
     def update(self):
         if self.sorting_visualizer.sorting and pygame.time.get_ticks() >= self.sorting_visualizer.target_time:  # check animation delay
-            if self.next:  # move to next iteration
+            if self.next:  # move to next iteration (used after render executed the last loop animation)
                 self.current_action = None
                 self.j+=1
                 self.next = False
