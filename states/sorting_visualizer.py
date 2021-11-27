@@ -178,10 +178,10 @@ class SelectionSort:
                         if self.j != self.smallest_num_index: self.sorting_visualizer.bars_color[self.j] = config.bars_color
                         self.next = True  # move to next iteration after render
                     if self.j == self.i:  # color the sorted bars
-                            self.sorting_visualizer.bars_color[self.i] = config.bars_swapped_color
+                            self.sorting_visualizer.bars_color[self.i] = config.bars_compared_color
                 else:
                     self.swapped = True  # used in render
-                    self.sorting_visualizer.bars_color[self.smallest_num_index] = config.bars_swapped_color  # color the new swapped bar
+                    self.sorting_visualizer.bars_color[self.smallest_num_index] = config.bars_swapped_color  # color the new swapped bar (the unsorted bar)
                     self.sorting_visualizer.bars_color[self.i] = config.bars_swap_color  # color the previous bars 
                     # swap bars
                     self.sorting_visualizer.bars_array[self.smallest_num_index].height, self.sorting_visualizer.bars_array[self.i].height = self.sorting_visualizer.bars_array[self.i].height, self.sorting_visualizer.bars_array[self.smallest_num_index].height  # get start and ending position of self.sorting_visualizer.bars_array
