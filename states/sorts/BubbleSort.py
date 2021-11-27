@@ -5,6 +5,7 @@ class BubbleSort:
     def __init__(self, sorting_visualizer, visualizer_manager, overlay):
         self.sorting_visualizer = sorting_visualizer
         self.visualizer_manager = visualizer_manager
+        self.sorting_visualizer.sorting = False
         self.swapped = False
         self.current_action = None
         self.action_stage = 0
