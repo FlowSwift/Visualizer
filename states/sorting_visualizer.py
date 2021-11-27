@@ -33,13 +33,11 @@ class SortingVisualizer(State):
         self.overlay = Overlay(self, visualizer_manager)
         self.bubble_sort = None #BubbleSort(self, self.visualizer_manager, self.overlay)
         self.selection_sort = None
-        self.current_sort = None
+        self.current_sort = BubbleSort(self, self.visualizer_manager, self.overlay)
         self.sorting_background = pygame.image.load(os.path.join(config.assets_dir, "graphics", "background.jpg")).convert()
         
     # check and update changes
     def update(self, delta_time, actions):
-        if not self.sorting:  # init if no sort going
-            self.current_sort = BubbleSort(self, self.visualizer_manager, self.overlay)
         # check for key inputs if not on timeout.
         if pygame.time.get_ticks() > self.delay_input:
             if actions["left_key"]:
@@ -89,8 +87,12 @@ class SortingVisualizer(State):
     # called when the screen is resized
     def screen_update(self, display, height_diff):
         self.overlay.screen_update(display, height_diff)
+        display.blit(self.sorting_background, (0,0))
         if self.current_sort:
-            self.current_sort.screen_update(display, height_diff)
+            self.current_sort.reset_loop()
+        self.array_bottom = self.visualizer_manager.SCREEN_HEIGHT
+        self.array_min_height = round(self.array_bottom / 1.2)
+        self.array_max_height = round(self.array_bottom / 2.2)
 
 # generate bars based on the options from main class
     def generate_bars(self):
@@ -179,9 +181,8 @@ class SelectionSort:
                             self.sorting_visualizer.bars_color[self.i] = config.bars_swapped_color
                 else:
                     self.swapped = True  # used in render
-                    if self.smallest_num_index != self.i:
-                        self.sorting_visualizer.bars_color[self.smallest_num_index] = config.bars_swapped_color  # color the new swapped bar
-                        self.sorting_visualizer.bars_color[self.i] = config.bars_swap_color  # color the previous bars 
+                    self.sorting_visualizer.bars_color[self.smallest_num_index] = config.bars_swapped_color  # color the new swapped bar
+                    self.sorting_visualizer.bars_color[self.i] = config.bars_swap_color  # color the previous bars 
                     # swap bars
                     self.sorting_visualizer.bars_array[self.smallest_num_index].height, self.sorting_visualizer.bars_array[self.i].height = self.sorting_visualizer.bars_array[self.i].height, self.sorting_visualizer.bars_array[self.smallest_num_index].height  # get start and ending position of self.sorting_visualizer.bars_array
                     self.sorting_visualizer.bars_array[self.smallest_num_index].y, self.sorting_visualizer.bars_array[self.i].y = self.sorting_visualizer.bars_array[self.i].y, self.sorting_visualizer.bars_array[self.smallest_num_index].y
@@ -210,9 +211,6 @@ class SelectionSort:
             self.sorting_visualizer.sorting = True
             self.sorting_visualizer.generate_bars()
             self.sorting_visualizer.draw_bars(display)
-
-    def update_screen(self,display):
-        pass
 
 class Overlay:
     def __init__(self, sorting_visualizer, visualizer_manager):

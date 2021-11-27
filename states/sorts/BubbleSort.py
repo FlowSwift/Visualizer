@@ -78,10 +78,3 @@ class BubbleSort:
             self.sorting_visualizer.draw_bars(display)
             self.sorting_visualizer.sorting = True
 
-    # called when the screen is resized
-    def screen_update(self, display, height_diff):
-        display.blit(self.sorting_visualizer.sorting_background, (0,0))
-        self.reset_loop()
-        self.sorting_visualizer.array_bottom = self.visualizer_manager.SCREEN_HEIGHT
-        self.sorting_visualizer.array_min_height = round(self.sorting_visualizer.array_bottom / 1.2)
-        self.sorting_visualizer.array_max_height = round(self.sorting_visualizer.array_bottom / 2.2)
