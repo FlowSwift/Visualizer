@@ -141,6 +141,52 @@ class SortingVisualizer(State):
     def remove_bar(self, display, bar):
         display.blit(self.sorting_background, (bar.x, bar.y), bar)
 
+class MergeSort:
+    def __init__(self, sorting_visualizer, visualizer_manager, overlay):
+        self.sorting_visualizer = sorting_visualizer
+        self.visualizer_manager = visualizer_manager
+        self.sorting_visualizer.sorting = False
+        self.merging = False
+
+    def merge(self, bars):
+        bars_len = len(bars)
+        if bars_len > 1:
+            half = bars_len//2
+            left_arr = bars[:half]
+            left_arr_len = len(left_arr)
+            right_arr = bars[half:]
+            right_arr_len = len(right_arr)
+            self.merge(left_arr)
+            self.merge(right_arr)
+            i, j, k = 0, 0, 0
+            while i < left_arr_len and j < right_arr_len:
+                if left_arr[i].y < right_arr[j].y:
+                    bars[k] = left_arr[i]
+                    i += 1
+                else:
+                    bars[k] = right_arr[j]
+                    j += 1
+                k += 1
+            while i < left_arr_len:
+                bars[k] = left_arr[i]
+                i += 1
+                k += 1
+            while j < right_arr_len:
+                bars[k] = right_arr[j]
+                j += 1
+                k += 1
+
+    def update(self):
+        if not self.merging:
+            self.merge(self.sorting_visualizer.bars_array)
+            self.merging = True
+
+    def reset_loop(self):
+        pass
+
+    def render(self, display):
+        self.sorting_visualizer.draw_bars(display)
+
 class Overlay:
     def __init__(self, sorting_visualizer, visualizer_manager):
         self.sorting_visualizer = sorting_visualizer
