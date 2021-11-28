@@ -1,5 +1,6 @@
 from pygame.constants import MOUSEBUTTONDOWN, MOUSEBUTTONUP
 from states.main_menu import MainMenu
+import sys
 
 import config.config as config
 
@@ -57,6 +58,7 @@ class Visualizer():
             if event.type == pygame.QUIT:
                 self.playing = False
                 self.running = False
+                sys.exit()
             if event.type == pygame.KEYDOWN:
                 if pygame.time.get_ticks() > self.delay_input:
                     self.delay_input = pygame.time.get_ticks() + 100
