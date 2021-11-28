@@ -21,7 +21,7 @@ class Visualizer():
         self.SCREEN_WIDTH, self.SCREEN_HEIGHT = config.SCREEN_WIDTH, config.SCREEN_HEIGHT
         self.WINDOW = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
         self.running, self.playing = True, True
-        self.actions = {"space": False, "left_key": False, "right_key": False, "up_key": False, "down_key": False, "left_mouse": False}  # key input checking.
+        self.actions = {"space": False, "left_key": False, "right_key": False, "up_key": False, "down_key": False, "left_mouse": False, "shift": False}  # key input checking.
         self.dt, self.prev_time = 0, 0  # delta time
         self.display_reset = True  # signal to render entire display on the next frame
         self.resize_delay = 0 
@@ -72,6 +72,8 @@ class Visualizer():
                         self.actions["up_key"] = True
                     if event.key == pygame.K_DOWN:
                         self.actions["down_key"] = True
+                    if event.mod & pygame.KMOD_SHIFT:
+                        self.actions["shift"] = True
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_SPACE:
                     self.actions["space"] = False
@@ -83,6 +85,8 @@ class Visualizer():
                     self.actions["up_key"] = False
                 if event.key == pygame.K_DOWN:
                     self.actions["down_key"] = False
+                if event.mod & pygame.KMOD_SHIFT:
+                        self.actions["shift"] = False
             if event.type == MOUSEBUTTONDOWN:
                 if event.button == 1:
                     self.actions["left_mouse"] = True
@@ -99,7 +103,7 @@ class Visualizer():
         if self.display_reset:  # check if entire display needs to be rendered due to changes
             pygame.display.flip()
             self.display_reset = False
-        pygame.display.update(self.SCREEN_WIDTH *0.1, self.SCREEN_HEIGHT*0.4, self.SCREEN_WIDTH *0.8, self.SCREEN_HEIGHT*0.6)
+        pygame.display.update(self.SCREEN_WIDTH *0, self.SCREEN_HEIGHT*0.4, self.SCREEN_WIDTH *1, self.SCREEN_HEIGHT*0.6)
 
     def get_dt(self):
         now = time.time()
