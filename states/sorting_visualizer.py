@@ -4,6 +4,7 @@ import random, math
 import copy
 
 from pygame.rect import Rect
+from pygame.time import delay
 
 
 import config.config as config
@@ -36,8 +37,8 @@ class SortingVisualizer(State):
         self.overlay = Overlay(self, visualizer_manager)
         self.bubble_sort = None #BubbleSort(self, self.visualizer_manager, self.overlay)
         self.selection_sort = None
-        #self.current_sort = BubbleSort(self, self.visualizer_manager, self.overlay)
-        self.current_sort = MergeSort(self, self.visualizer_manager, self.overlay)
+        self.current_sort = BubbleSort(self, self.visualizer_manager, self.overlay)
+        #self.current_sort = MergeSort(self, self.visualizer_manager, self.overlay)
         self.sorting_background = pygame.image.load(os.path.join(config.assets_dir, "graphics", "background.jpg")).convert()
         
     # check and update changes
@@ -69,6 +70,8 @@ class SortingVisualizer(State):
                 self.reset_delay_time = pygame.time.get_ticks() + self.reset_delay
                 if self.current_sort:
                     self.current_sort.reset_loop()
+                    if isinstance(self.current_sort, MergeSort):
+                        self.current_sort = MergeSort(self, self.visualizer_manager, self.overlay)
         self.overlay.update(actions)
         # check what sort selected and update
         if self.current_sort:
@@ -151,16 +154,23 @@ class MergeSort:
         self.sorting_visualizer = sorting_visualizer
         self.visualizer_manager = visualizer_manager
         self.sorting_visualizer.sorting = False
-        self.merging = False
-        self.break_merge = False
-        self.break_num = 0
+        self.merging = True
+        self.merging_init = False
         self.k = 0
-        self.side = "left"
+
+    def add_delay(self, delay_time):
+        self.sorting_visualizer.target_time = pygame.time.get_ticks() + delay_time
+        while pygame.time.get_ticks() <= self.sorting_visualizer.target_time and self.merging:
+            self.visualizer_manager.visualizer_loop(True)
 
     def merge(self, bars, index):
+        if not self.merging:
+            return
         bars_len = len(bars)
         if bars_len <= 1:
             self.sorting_visualizer.bars_color[index] = config.bars_swapped_color
+            self.add_delay(self.sorting_visualizer.delay*15)
+
         else:
             half = bars_len//2
             left_arr = copy.deepcopy(bars)[:half]
@@ -170,30 +180,24 @@ class MergeSort:
             self.merge(left_arr, index)
             self.merge(right_arr, index + half)
             self.k = index
-            i, j, k = self.break_num, self.break_num, self.break_num
+            i, j, k = 0, 0, 0
             if self.merging:
                 for o in range(len(bars)):
                     self.sorting_visualizer.bars_color[self.k + o] = config.bars_swapped_color
-                    self.sorting_visualizer.target_time = pygame.time.get_ticks() + self.sorting_visualizer.delay*15
-                    while pygame.time.get_ticks() <= self.sorting_visualizer.target_time:
-                        self.visualizer_manager.visualizer_loop(True)
+                    self.add_delay(self.sorting_visualizer.delay*15)
             while i < left_arr_len and j < right_arr_len and self.merging:
                 if left_arr[i].y > right_arr[j].y:
                     bars[k].height, bars[k].y = left_arr[i].height, left_arr[i].y
                     self.sorting_visualizer.bars_array[self.k].height, self.sorting_visualizer.bars_array[self.k].y = left_arr[i].height, left_arr[i].y
                     self.sorting_visualizer.bars_color[self.k] = config.bars_compared_color
                     i += 1
-                    self.sorting_visualizer.target_time = pygame.time.get_ticks() + self.sorting_visualizer.delay*15
-                    while pygame.time.get_ticks() <= self.sorting_visualizer.target_time:
-                        self.visualizer_manager.visualizer_loop(True)
+                    self.add_delay(self.sorting_visualizer.delay*15)
                 else:
                     bars[k].height, bars[k].y = right_arr[j].height, right_arr[j].y
                     self.sorting_visualizer.bars_array[self.k].height, self.sorting_visualizer.bars_array[self.k].y = right_arr[j].height, right_arr[j].y
                     self.sorting_visualizer.bars_color[self.k] = config.bars_compared_color
                     j += 1
-                    self.sorting_visualizer.target_time = pygame.time.get_ticks() + self.sorting_visualizer.delay*15
-                    while pygame.time.get_ticks() <= self.sorting_visualizer.target_time:
-                        self.visualizer_manager.visualizer_loop(True)
+                    self.add_delay(self.sorting_visualizer.delay*15)
                 k += 1
                 self.k += 1
             while i < left_arr_len and self.merging:
@@ -203,9 +207,7 @@ class MergeSort:
                 i += 1
                 k += 1
                 self.k += 1
-                self.sorting_visualizer.target_time = pygame.time.get_ticks() + self.sorting_visualizer.delay*15
-                while pygame.time.get_ticks() <= self.sorting_visualizer.target_time:
-                        self.visualizer_manager.visualizer_loop(True)
+                self.add_delay(self.sorting_visualizer.delay*15)
             while j < right_arr_len and self.merging:
                 bars[k].height, bars[k].y = right_arr[j].height, right_arr[j].y
                 self.sorting_visualizer.bars_array[self.k].height, self.sorting_visualizer.bars_array[self.k].y = right_arr[j].height, right_arr[j].y
@@ -213,31 +215,28 @@ class MergeSort:
                 j += 1
                 k += 1
                 self.k += 1
-                self.sorting_visualizer.target_time = pygame.time.get_ticks() + self.sorting_visualizer.delay*15
-                while pygame.time.get_ticks() <= self.sorting_visualizer.target_time:
-                        self.visualizer_manager.visualizer_loop(True)
+                self.add_delay(self.sorting_visualizer.delay*15)
             
 
     def update(self):
-        if not self.merging and self.sorting_visualizer.sorting:
-            self.merging = True
-            a = copy.deepcopy(self.sorting_visualizer.bars_array)
-            self.merge(a, 0)
-            print(self.sorting_visualizer.bars_array)
+        if not self.merging_init and self.sorting_visualizer.sorting:
+            self.merging_init = True
+            tmp_array = copy.deepcopy(self.sorting_visualizer.bars_array)
+            self.merge(tmp_array, 0)
             self.reset_loop()
 
     def reset_loop(self):
         self.sorting_visualizer.sorting = False
-        self.merging = False
+        self.merging_init = False
         
         
 
     def render(self, display):
         if self.sorting_visualizer.sorting:
-            display.blit(self.sorting_visualizer.sorting_background, (0,0))
+            display.blit(self.sorting_visualizer.sorting_background, (self.visualizer_manager.SCREEN_WIDTH *0.1, self.visualizer_manager.SCREEN_HEIGHT*0.4))
             self.sorting_visualizer.draw_bars(display)
             #self.sorting_visualizer.draw_bars(display)  # redraw chart after inner loop iteration
-        else:  # if not sorting, draw bars and and start sorting
+        elif self.merging:  # if not sorting, draw bars and and start sorting
             self.sorting_visualizer.sorting = True
             self.sorting_visualizer.generate_bars()
             self.sorting_visualizer.draw_bars(display)
@@ -254,10 +253,11 @@ class Overlay:
         self.duplicates_modes = ["true", "false"]  # used to set selection colors
         self.duplicates_modes_colors = {"true":config.overlay_text_selected, "false":config.overlay_text_color}  # current colors of the modes selection
         self.duplicates_mode_selected = 0  # 0 for True, 1 for False
-        self.sort_modes = ["bubble", "selection"]  # used to set selection colors
-        self.sort_modes_colors = {"bubble":config.overlay_text_selected, "selection":config.overlay_text_color}  # current colors of the modes selection
-        self.sort_mode_selected = 0  # 0 for Bubble, 1 for Selection
+        self.sort_modes = ["bubble", "selection", "merge"]  # used to set selection colors
+        self.sort_modes_colors = {"bubble":config.overlay_text_selected, "selection":config.overlay_text_color, "merge":config.overlay_text_color}  # current colors of the modes selection
+        self.sort_mode_selected = 0  # 0 for Bubble, 1 for Selection, 2 for Merge
         self.extra_delay_color = "blue"
+        self.merge_current = False
 
 
     def update(self, actions):
@@ -310,13 +310,22 @@ class Overlay:
                         self.sort_mode_selected = 0
                         self.render_bool = True
                         sort_mode_button_change = True
+                        self.sorting_visualizer.current_sort.merging = False
                         self.sorting_visualizer.current_sort = BubbleSort(self.sorting_visualizer, self.visualizer_manager, self)
                         self.sorting_visualizer.delay_input = pygame.time.get_ticks() + after_click_delay
                     if self.sort_mode_selection2.collidepoint(mouse_pos):
                         self.sort_mode_selected = 1
                         self.render_bool = True
                         sort_mode_button_change = True
+                        self.sorting_visualizer.current_sort.merging = False
                         self.sorting_visualizer.current_sort = SelectionSort(self.sorting_visualizer, self.visualizer_manager, self)
+                        self.sorting_visualizer.delay_input = pygame.time.get_ticks() + after_click_delay
+                    if self.sort_mode_selection3.collidepoint(mouse_pos):
+                        self.sort_mode_selected = 2
+                        self.render_bool = True
+                        sort_mode_button_change = True
+                        if not isinstance(self.sorting_visualizer.current_sort, MergeSort):
+                            self.sorting_visualizer.current_sort = MergeSort(self.sorting_visualizer, self.visualizer_manager, self)
                         self.sorting_visualizer.delay_input = pygame.time.get_ticks() + after_click_delay
                     if self.extra_delay_selection.collidepoint(mouse_pos):
                         if isinstance(self.sorting_visualizer.current_sort, SelectionSort):
@@ -375,6 +384,8 @@ class Overlay:
         sort_mode_selection1_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.05)
         sort_mode_selection2_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.75)
         sort_mode_selection2_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.13)
+        sort_mode_selection3_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.90)
+        sort_mode_selection3_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.05)
         extra_delay_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.08)
         extra_delay_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.25)
 
@@ -390,6 +401,7 @@ class Overlay:
         self.array_duplicates_selection2 = self.visualizer_manager.draw_text(display, (f"False"), self.duplicates_modes_colors["false"], array_duplicates_selection2_x, array_duplicates_selection2_y, "font_sorting_overlay")
         self.sort_mode_selection1 = self.visualizer_manager.draw_text(display, (f"Bubble Sort"), self.sort_modes_colors["bubble"], sort_mode_selection1_x, sort_mode_selection1_y, "font_sorting_overlay")
         self.sort_mode_selection2 = self.visualizer_manager.draw_text(display, (f"Selection Sort"), self.sort_modes_colors["selection"], sort_mode_selection2_x, sort_mode_selection2_y, "font_sorting_overlay")
+        self.sort_mode_selection3 = self.visualizer_manager.draw_text(display, (f"Merge Sort"), self.sort_modes_colors["merge"], sort_mode_selection3_x, sort_mode_selection3_y, "font_sorting_overlay")
         self.extra_delay_selection = self.visualizer_manager.draw_text(display, (f"Extra Animations"), self.extra_delay_color, extra_delay_x, extra_delay_y, "font_sorting_overlay")
 
     # called when the screen is resized
