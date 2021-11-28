@@ -13,8 +13,12 @@ from states.state import State
 from states.sorts.BubbleSort import BubbleSort
 from states.sorts.SelectionSort import SelectionSort
 
-  # main sorting state
+
 class SortingVisualizer(State):
+    """
+    main sorting state
+    used as interface for the sorting classes
+    """
     def __init__(self, visualizer_manager):
         super().__init__(visualizer_manager)
         self.visualizer_manager = visualizer_manager
@@ -40,9 +44,9 @@ class SortingVisualizer(State):
         self.current_sort = BubbleSort(self, self.visualizer_manager, self.overlay)
         #self.current_sort = MergeSort(self, self.visualizer_manager, self.overlay)
         self.sorting_background = pygame.image.load(os.path.join(config.assets_dir, "graphics", "background.jpg")).convert()
-        
-    # check and update changes
+
     def update(self, delta_time, actions):
+        """check and update changes and properties"""
         # check for key inputs if not on timeout.
         if pygame.time.get_ticks() > self.delay_input:
             if actions["left_key"]:
@@ -77,9 +81,9 @@ class SortingVisualizer(State):
         # check what sort selected and update
         if self.current_sort:
             self.current_sort.update()
-        
-    # check if needed and render changes on screen
+
     def render(self, display):
+        """check if needed and render changes on screen"""
         if not self.sorting:
             display.blit(self.sorting_background, (0,0))
             self.overlay.render_bool = True
@@ -92,8 +96,8 @@ class SortingVisualizer(State):
         if self.current_sort:
             self.current_sort.render(display)
 
-    # called when the screen is resized
     def screen_update(self, display, height_diff):
+        """called when the screen is resized"""
         self.overlay.screen_update(display, height_diff)
         display.blit(self.sorting_background, (0,0))
         if self.current_sort:
@@ -102,8 +106,8 @@ class SortingVisualizer(State):
         self.array_min_height = round(self.array_bottom / 1.2)
         self.array_max_height = round(self.array_bottom / 2.2)
 
-# generate bars based on the options from main class
     def generate_bars(self):
+        """generate bars based on the options from main class"""
         self.bars_array = []
         self.bars_color = [config.bars_color for i in range(self.array_length)]  # add the default color for all the bars
         if not self.bars_array or self.sorting == False:
@@ -125,19 +129,18 @@ class SortingVisualizer(State):
                     random_num1 = random.randrange(3,len(self.numbers)-3)
                     random_num2 = random.randrange(random_num1-3, random_num1+4)
                     self.numbers[random_num1], self.numbers[random_num2] = self.numbers[random_num2], self.numbers[random_num1]
-        
 
-    # draw and generate bars based on screen size
     def draw_bars(self, display, height_diff=0):
+        """draw and generate bars based on screen size"""
         bars_area = self.visualizer_manager.SCREEN_WIDTH * 0.8  # bars will always be inside this area
         bars_width =  round((bars_area * 0.7) / self.array_length)
         bars_gap = math.ceil((bars_area * 0.3) / self.array_length - 1)
         start_pos = round((self.visualizer_manager.SCREEN_WIDTH - ((bars_gap * (self.array_length - 1)) + (bars_width * self.array_length)))/2)
         first_draw = False
-        if not self.bars_array:
+        if not self.bars_array:  # check if already sorting, draw current array
             first_draw = True
         else:
-            display.blit(self.sorting_background, (self.visualizer_manager.SCREEN_WIDTH *0.1, self.visualizer_manager.SCREEN_HEIGHT*0.4, self.visualizer_manager.SCREEN_WIDTH *0.8, self.visualizer_manager.SCREEN_HEIGHT*0.6))
+            display.blit(self.sorting_background, (self.visualizer_manager.SCREEN_WIDTH *0, self.visualizer_manager.SCREEN_HEIGHT*0.4, self.visualizer_manager.SCREEN_WIDTH *1, self.visualizer_manager.SCREEN_HEIGHT*0.6))
         for i in range(len(self.numbers)):
             #self.bars_array.append(pygame.draw.line(display, self.bars_color[i], (start_pos,self.array_bottom), (start_pos,self.numbers[i]), bars_width))  # line
             if first_draw:
@@ -146,8 +149,10 @@ class SortingVisualizer(State):
                 pygame.draw.rect(display, self.bars_color[i], self.bars_array[i])
             start_pos += bars_gap + bars_width
 
-    # remove a bar by blitting the background in the size of the bar(max height of the bar) on the bar
     def remove_bar(self, display, bar):
+        """
+        remove a bar by blitting the background in the size of the bar(max height of the bar) on the bar
+        """
         display.blit(self.sorting_background, (bar.x, bar.y), bar)
 
 class MergeSort:
@@ -161,12 +166,16 @@ class MergeSort:
         self.k = 0  # the index of the current number in the main array, outside the recursive function
 
     def add_delay(self, delay_time):
+        """
+        Adds delay between animation and wait till delay time passed
+        Game loop runs during that time.
+        """
         self.sorting_visualizer.target_time = pygame.time.get_ticks() + delay_time
         while pygame.time.get_ticks() <= self.sorting_visualizer.target_time and self.merging:
             self.visualizer_manager.visualizer_loop(True)
 
-    # recursive visualization
     def merge(self, bars, index):
+        """recursive visualization"""
         bars_len = len(bars)
         if bars_len > 1:
             half = bars_len//2
@@ -216,6 +225,7 @@ class MergeSort:
             
 
     def update(self):
+        """check and update changes and properties"""
         if not self.merging_init and self.sorting_visualizer.sorting:
             self.merging_init = True
             tmp_array = copy.deepcopy(self.sorting_visualizer.bars_array)
@@ -223,12 +233,14 @@ class MergeSort:
             self.reset_loop()
 
     def reset_loop(self):
+        """Used to start a new sort loop, will generate a new array"""
         self.sorting_visualizer.sorting = False
         self.merging_init = False
         
         
 
     def render(self, display):
+        """Draw and render the screen"""
         if self.sorting_visualizer.sorting:
             display.blit(self.sorting_visualizer.sorting_background, (self.visualizer_manager.SCREEN_WIDTH *0.1, self.visualizer_manager.SCREEN_HEIGHT*0.4))
             self.sorting_visualizer.draw_bars(display)
@@ -258,12 +270,12 @@ class Overlay:
 
 
     def update(self, actions):
+        """Check for overlay changes and update in the main sorting state"""
         after_click_delay = 500  # clicking timeout
         mouse_hold_delay = 200
         array_mode_button_change = False
         array_duplicates_button_change = False
         sort_mode_button_change = False
-        extra_animations = False
         # check mouse inputs and add delay
         if pygame.time.get_ticks() > self.sorting_visualizer.delay_input:
             mouse_pos = pygame.mouse.get_pos()
@@ -340,9 +352,14 @@ class Overlay:
             self.mode_color_change(array_duplicates_button_change, self.duplicates_modes, self.duplicates_mode_selected, self.duplicates_modes_colors)
             self.mode_color_change(sort_mode_button_change, self.sort_modes, self.sort_mode_selected, self.sort_modes_colors)
 
-
-    #  change button color
     def mode_color_change(self, button_change, modes, selected, colors):
+        """
+        check for button color change
+        button_change -- a checker if the button was clicked at all
+        modes -- a dict of the different available options
+        selected -- currently selected option
+        colors -- dict the modes as keywords and their colors as value
+        """
         if button_change:
             for i in range(len(modes)):
                 if i == selected:
@@ -401,7 +418,7 @@ class Overlay:
         self.sort_mode_selection3 = self.visualizer_manager.draw_text(display, (f"Merge Sort"), self.sort_modes_colors["merge"], sort_mode_selection3_x, sort_mode_selection3_y, "font_sorting_overlay")
         self.extra_delay_selection = self.visualizer_manager.draw_text(display, (f"Extra Animations"), self.extra_delay_color, extra_delay_x, extra_delay_y, "font_sorting_overlay")
 
-    # called when the screen is resized
     def screen_update(self, display, height_diff):
+        """called when the screen is resized"""
         self.overlay_height = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.20)
         self.render(display)

@@ -15,6 +15,7 @@ class BubbleSort:
 
     #  bubble has 3 stages for the animation. 1st. comparing color. 2nd. unsorted(< or >) color. 3rd. after swap color
     def update(self):
+        """check and update changes and properties"""
         if self.sorting_visualizer.sorting and pygame.time.get_ticks() >= self.sorting_visualizer.target_time:  # check animation delay
             if self.next:  # move to next iteration (used after render executed the last loop animation)
                 self.current_action = None
@@ -58,12 +59,14 @@ class BubbleSort:
                 self.reset_loop()
 
     def reset_loop(self):
+        """Used to start a new sort loop, will generate a new array"""
         self.current_action = None
         self.sorting_visualizer.sorting = False
         self.i = 0
         self.j = 0
 
     def render(self, display):
+        """Draw and render the screen"""
         if self.sorting_visualizer.sorting:
             # get images size of bars and increase to max height, use it to replace a bar with the background and "remove" it
             img_cover_bar1, img_cover_bar2 = self.sorting_visualizer.bars_array[self.j].copy(), self.sorting_visualizer.bars_array[self.j+1].copy()

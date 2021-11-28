@@ -103,7 +103,7 @@ class Visualizer():
         if self.display_reset:  # check if entire display needs to be rendered due to changes
             pygame.display.flip()
             self.display_reset = False
-        pygame.display.update(self.SCREEN_WIDTH *0, self.SCREEN_HEIGHT*0.4, self.SCREEN_WIDTH *1, self.SCREEN_HEIGHT*0.6)
+        pygame.display.flip()
 
     def get_dt(self):
         now = time.time()
