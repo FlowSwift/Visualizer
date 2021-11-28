@@ -14,6 +14,7 @@ class MainMenu(State):
         self.delay_input = 0
 
     def update(self, delta_time, actions):
+        """check and update changes and properties"""
         if actions["space"]:
             if pygame.time.get_ticks() > self.delay_input:
                 self.delay_input = pygame.time.get_ticks() + 100
@@ -24,6 +25,8 @@ class MainMenu(State):
         
 
     def render(self, display):
+        """check if needed and render changes on screen"""
         display.fill((255,255,255))
-        self.visualizer_manager.draw_text(display, "Game States", (0,0,0), self.visualizer_manager.SCREEN_WIDTH/2, self.visualizer_manager.SCREEN_HEIGHT/2)
+        self.visualizer_manager.draw_text(display, "Visualizer!", (0,0,0), self.visualizer_manager.SCREEN_WIDTH/2, self.visualizer_manager.SCREEN_HEIGHT*0.15)
+        self.visualizer_manager.draw_text(display, "Press Space to Contiue", (0,0,0), self.visualizer_manager.SCREEN_WIDTH/2+ 8, self.visualizer_manager.SCREEN_HEIGHT*0.85, "font_sorting_overlay")
 

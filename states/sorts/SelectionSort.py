@@ -18,6 +18,7 @@ class SelectionSort:
         self.new_lowest_delay_check = False
 
     def update(self):
+        """check and update changes and properties"""
         if self.sorting_visualizer.sorting and pygame.time.get_ticks() >= self.sorting_visualizer.target_time and (pygame.time.get_ticks() >= self.new_lowest_target_time or not self.new_lowest_delay_check):  # check animation delay
             if self.next:  # move to next iteration (used after render executed the last loop animation) 
                 self.current_action = "compare"
@@ -56,6 +57,7 @@ class SelectionSort:
                 self.reset_loop()
 
     def reset_loop(self):
+        """Used to start a new sort loop, will generate a new array"""
         self.smallest_num_index = 0
         self.current_action = None
         self.sorting_visualizer.sorting = False
@@ -63,9 +65,11 @@ class SelectionSort:
         self.j = 0
 
     def render(self, display):
+        """Draw and render the screen"""
         if self.sorting_visualizer.sorting:
             if self.swapped:
                 self.sorting_visualizer.draw_bars(display)  # redraw chart after inner loop iteration
+                self.swapped = False
             else:
                 pygame.draw.rect(display, self.sorting_visualizer.bars_color[self.j], self.sorting_visualizer.bars_array[self.j])
                 pygame.draw.rect(display, self.sorting_visualizer.bars_color[self.smallest_num_index], self.sorting_visualizer.bars_array[self.smallest_num_index])
