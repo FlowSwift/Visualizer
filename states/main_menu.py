@@ -16,11 +16,12 @@ class MainMenu(State):
     def update(self, delta_time, actions):
         if actions["space"]:
             if pygame.time.get_ticks() > self.delay_input:
-                self.delay_input = pygame.time.get_ticks() + 100
-                ev = pygame.event.Event(pygame.VIDEORESIZE, size=(config.SCREEN_WIDTH,config.SCREEN_HEIGHT))
-                pygame.event.post(ev)
-                sorting_visualizer_state = SortingVisualizer(self.visualizer_manager)
-                sorting_visualizer_state.enter_state()
+                pass
+        self.delay_input = pygame.time.get_ticks() + 100
+        ev = pygame.event.Event(pygame.VIDEORESIZE, size=(config.SCREEN_WIDTH,config.SCREEN_HEIGHT))
+        pygame.event.post(ev)
+        sorting_visualizer_state = SortingVisualizer(self.visualizer_manager)
+        sorting_visualizer_state.enter_state()
         
 
     def render(self, display):

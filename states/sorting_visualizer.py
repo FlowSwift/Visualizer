@@ -1,6 +1,9 @@
 import pygame, os
 import math
 import random, math
+import copy
+
+from pygame.rect import Rect
 
 
 import config.config as config
@@ -20,7 +23,7 @@ class SortingVisualizer(State):
         self.array_bottom = config.SCREEN_HEIGHT
         self.array_min_height = round(self.array_bottom / 1.2)  # bars min and max possible height
         self.array_max_height = round(self.array_bottom / 2.2)
-        self.array_length = 50  # bars amount
+        self.array_length = 10  # bars amount
         self.array_modes = {"array_mode" : "random", "duplicates" : True}  # sort modes: "random" "nearly_sorted"
         self.array_asc_order = True  # IN PROGRESS
         self.unsorted_amount = 10  # How many swaps for a nearly sorted list
@@ -33,7 +36,8 @@ class SortingVisualizer(State):
         self.overlay = Overlay(self, visualizer_manager)
         self.bubble_sort = None #BubbleSort(self, self.visualizer_manager, self.overlay)
         self.selection_sort = None
-        self.current_sort = BubbleSort(self, self.visualizer_manager, self.overlay)
+        #self.current_sort = BubbleSort(self, self.visualizer_manager, self.overlay)
+        self.current_sort = MergeSort(self, self.visualizer_manager, self.overlay)
         self.sorting_background = pygame.image.load(os.path.join(config.assets_dir, "graphics", "background.jpg")).convert()
         
     # check and update changes
@@ -117,6 +121,7 @@ class SortingVisualizer(State):
                     random_num1 = random.randrange(3,len(self.numbers)-3)
                     random_num2 = random.randrange(random_num1-3, random_num1+4)
                     self.numbers[random_num1], self.numbers[random_num2] = self.numbers[random_num2], self.numbers[random_num1]
+        
 
     # draw and generate bars based on screen size
     def draw_bars(self, display, height_diff=0):
@@ -147,45 +152,95 @@ class MergeSort:
         self.visualizer_manager = visualizer_manager
         self.sorting_visualizer.sorting = False
         self.merging = False
+        self.break_merge = False
+        self.break_num = 0
+        self.k = 0
+        self.side = "left"
 
-    def merge(self, bars):
+    def merge(self, bars, index):
         bars_len = len(bars)
-        if bars_len > 1:
+        if bars_len <= 1:
+            self.sorting_visualizer.bars_color[index] = config.bars_swapped_color
+        else:
             half = bars_len//2
-            left_arr = bars[:half]
+            left_arr = copy.deepcopy(bars)[:half]
             left_arr_len = len(left_arr)
-            right_arr = bars[half:]
+            right_arr = copy.deepcopy(bars)[half:]
             right_arr_len = len(right_arr)
-            self.merge(left_arr)
-            self.merge(right_arr)
-            i, j, k = 0, 0, 0
-            while i < left_arr_len and j < right_arr_len:
-                if left_arr[i].y < right_arr[j].y:
-                    bars[k] = left_arr[i]
+            self.merge(left_arr, index)
+            self.merge(right_arr, index + half)
+            self.k = index
+            i, j, k = self.break_num, self.break_num, self.break_num
+            if self.merging:
+                for o in range(len(bars)):
+                    self.sorting_visualizer.bars_color[self.k + o] = config.bars_swapped_color
+                    self.sorting_visualizer.target_time = pygame.time.get_ticks() + self.sorting_visualizer.delay*15
+                    while pygame.time.get_ticks() <= self.sorting_visualizer.target_time:
+                        self.visualizer_manager.visualizer_loop(True)
+            while i < left_arr_len and j < right_arr_len and self.merging:
+                if left_arr[i].y > right_arr[j].y:
+                    bars[k].height, bars[k].y = left_arr[i].height, left_arr[i].y
+                    self.sorting_visualizer.bars_array[self.k].height, self.sorting_visualizer.bars_array[self.k].y = left_arr[i].height, left_arr[i].y
+                    self.sorting_visualizer.bars_color[self.k] = config.bars_compared_color
                     i += 1
+                    self.sorting_visualizer.target_time = pygame.time.get_ticks() + self.sorting_visualizer.delay*15
+                    while pygame.time.get_ticks() <= self.sorting_visualizer.target_time:
+                        self.visualizer_manager.visualizer_loop(True)
                 else:
-                    bars[k] = right_arr[j]
+                    bars[k].height, bars[k].y = right_arr[j].height, right_arr[j].y
+                    self.sorting_visualizer.bars_array[self.k].height, self.sorting_visualizer.bars_array[self.k].y = right_arr[j].height, right_arr[j].y
+                    self.sorting_visualizer.bars_color[self.k] = config.bars_compared_color
                     j += 1
+                    self.sorting_visualizer.target_time = pygame.time.get_ticks() + self.sorting_visualizer.delay*15
+                    while pygame.time.get_ticks() <= self.sorting_visualizer.target_time:
+                        self.visualizer_manager.visualizer_loop(True)
                 k += 1
-            while i < left_arr_len:
-                bars[k] = left_arr[i]
+                self.k += 1
+            while i < left_arr_len and self.merging:
+                bars[k].height, bars[k].y = left_arr[i].height, left_arr[i].y
+                self.sorting_visualizer.bars_array[self.k].height, self.sorting_visualizer.bars_array[self.k].y = left_arr[i].height, left_arr[i].y
+                self.sorting_visualizer.bars_color[self.k] = config.bars_compared_color
                 i += 1
                 k += 1
-            while j < right_arr_len:
-                bars[k] = right_arr[j]
+                self.k += 1
+                self.sorting_visualizer.target_time = pygame.time.get_ticks() + self.sorting_visualizer.delay*15
+                while pygame.time.get_ticks() <= self.sorting_visualizer.target_time:
+                        self.visualizer_manager.visualizer_loop(True)
+            while j < right_arr_len and self.merging:
+                bars[k].height, bars[k].y = right_arr[j].height, right_arr[j].y
+                self.sorting_visualizer.bars_array[self.k].height, self.sorting_visualizer.bars_array[self.k].y = right_arr[j].height, right_arr[j].y
+                self.sorting_visualizer.bars_color[self.k] = config.bars_compared_color
                 j += 1
                 k += 1
+                self.k += 1
+                self.sorting_visualizer.target_time = pygame.time.get_ticks() + self.sorting_visualizer.delay*15
+                while pygame.time.get_ticks() <= self.sorting_visualizer.target_time:
+                        self.visualizer_manager.visualizer_loop(True)
+            
 
     def update(self):
-        if not self.merging:
-            self.merge(self.sorting_visualizer.bars_array)
+        if not self.merging and self.sorting_visualizer.sorting:
             self.merging = True
+            a = copy.deepcopy(self.sorting_visualizer.bars_array)
+            self.merge(a, 0)
+            print(self.sorting_visualizer.bars_array)
+            self.reset_loop()
 
     def reset_loop(self):
-        pass
+        self.sorting_visualizer.sorting = False
+        self.merging = False
+        
+        
 
     def render(self, display):
-        self.sorting_visualizer.draw_bars(display)
+        if self.sorting_visualizer.sorting:
+            display.blit(self.sorting_visualizer.sorting_background, (0,0))
+            self.sorting_visualizer.draw_bars(display)
+            #self.sorting_visualizer.draw_bars(display)  # redraw chart after inner loop iteration
+        else:  # if not sorting, draw bars and and start sorting
+            self.sorting_visualizer.sorting = True
+            self.sorting_visualizer.generate_bars()
+            self.sorting_visualizer.draw_bars(display)
 
 class Overlay:
     def __init__(self, sorting_visualizer, visualizer_manager):

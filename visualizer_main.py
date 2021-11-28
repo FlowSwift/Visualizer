@@ -30,7 +30,7 @@ class Visualizer():
         self.delay_input = 0
 
     # main game loop
-    def visualizer_loop(self):
+    def visualizer_loop(self, run_once=False):
         while self.playing:
             #clock.tick(60)  # untick to not burn cpu
             if self.resize_delay < pygame.time.get_ticks():
@@ -38,6 +38,8 @@ class Visualizer():
                 self.check_events()
                 self.update()
                 self.render()
+                if run_once:
+                    return
 
     #  check events and set actions dicts with resaults to check from other states
     def check_events(self):
