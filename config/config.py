@@ -31,6 +31,7 @@ font = ""
 sorting_background = ""
 
 def load_assets():
+    """load assests on startup"""
     global font
     global sorting_background
     sorting_background = pygame.image.load(os.path.join(assets_dir, "graphics", "background.jpg")).convert()

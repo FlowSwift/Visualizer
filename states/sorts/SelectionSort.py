@@ -65,6 +65,7 @@ class SelectionSort:
         self.j = 0
 
     def render(self, display):
+        """Draw and render the screen"""
         if self.sorting_visualizer.sorting:
             if self.swapped:
                 self.sorting_visualizer.draw_bars(display)  # redraw chart after inner loop iteration
