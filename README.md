@@ -49,7 +49,7 @@ As of now there are currently 3 sorting algorithms implemented, more sorting alg
 
 ------
 A thanks to Christian Dueñas for helping me implement game states and introducing me to the idea of Strategy Deisgn Pattern and Game States.
-Check him out: [Christian Dueñas](https://www.youtube.com/c/ChristianDuenas/featured)
+Check him out: [Christian Dueñas](https://www.youtube.com/c/ChristianDuenas/featured)  
 [Strategy Design Pattern](https://refactoring.guru/design-patterns/strategy)
 
 # Sorting Visualizer
