@@ -1,4 +1,5 @@
 
+
 ![alt text](https://i.imgur.com/gC9cE5N.png)
 
 
@@ -6,11 +7,11 @@
 
   
 
-A program to visualize sorting algorithms and pathfinder algorithms(FUTURE FEATURE)
+Algorithms Visualizer made in pygame using game states and Strategy Design Pattern.
 
   
 
-## Development
+## Installation
 
   
 
@@ -41,6 +42,15 @@ python3 visualizer_main.py
 Press the spacebar to begin the sorting visualizer
 
   
+
+## Information
+
+As of now there are currently 3 sorting algorithms implemented, more sorting algorithms and other kinds of algorithm visualizers will be added in the future.
+
+------
+A thanks to Christian Dueñas for helping me implement game states and introducing me to the idea of Strategy Deisgn Pattern and Game States.
+Check him out: [Christian Dueñas](https://www.youtube.com/c/ChristianDuenas/featured)
+[Strategy Design Pattern](https://refactoring.guru/design-patterns/strategy)
 
 # Sorting Visualizer
 
