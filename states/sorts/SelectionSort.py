@@ -60,6 +60,7 @@ class SelectionSort:
         """Used to start a new sort loop, will generate a new array"""
         self.smallest_num_index = 0
         self.current_action = None
+        self.last_smallest_num_index = 0
         self.sorting_visualizer.sorting = False
         self.i = 0
         self.j = 0

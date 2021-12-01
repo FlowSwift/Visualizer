@@ -47,10 +47,10 @@ Press the spacebar to begin the sorting visualizer
 
 As of now there are currently 3 sorting algorithms implemented, more sorting algorithms and other kinds of algorithm visualizers will be added in the future.
 
-------
-A thanks to Christian Dueñas for helping me implement game states and introducing me to the idea of Strategy Deisgn Pattern and Game States.
-Check him out: [Christian Dueñas](https://www.youtube.com/c/ChristianDuenas/featured)  
-[Strategy Design Pattern](https://refactoring.guru/design-patterns/strategy)
+____
+A thanks to [Christian Dueñas](https://www.youtube.com/c/ChristianDuenas/featured) for helping me implement game states and introducing me to the idea of Strategy Deisgn Pattern and Game States.
+____
+Check out the [Strategy Design Pattern](https://refactoring.guru/design-patterns/strategy)
 
 # Sorting Visualizer
 
@@ -58,14 +58,13 @@ Check him out: [Christian Dueñas](https://www.youtube.com/c/ChristianDuenas/fea
 
 ## Controls:
 
-left-right arrow keys: Change sorting speed.
+ - left-right arrow keys: Change sorting speed.
+ - up-down arrow keys: Change array length
+ - Spacebar: Start a new sort and generate a new array
+ - Use the mouse to choose between different options and modes in the
+   overlay
 
-up-down arrow keys: Change array length
-
-Spacebar: Start a new sort and generate a new array
-
-Use the mouse to choose between different options and modes in the overlay
-
+## Options:
   
 
 ### Delay:
