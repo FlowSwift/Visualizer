@@ -280,7 +280,7 @@ class Overlay:
         """render the overlay text and options"""
         start_stop_pos_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.08)
         start_stop_pos_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.04)
-        array_length_pos_x = start_stop_pos_x + 10
+        array_length_pos_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.085)
         array_length_pos_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.13)
         array_mode_pos_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.25)
         array_mode_pos_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.09)
@@ -306,7 +306,7 @@ class Overlay:
         extra_delay_x = math.floor(self.visualizer_manager.SCREEN_WIDTH * 0.08)
         extra_delay_y = math.floor(self.visualizer_manager.SCREEN_HEIGHT * 0.25)
 
-        self.visualizer_manager.draw_text(display, (f"Speed: {self.sorting_visualizer.delay} < >"), config.overlay_text_color, start_stop_pos_x, start_stop_pos_y, "font_sorting_overlay")
+        self.visualizer_manager.draw_text(display, (f"Delay: {self.sorting_visualizer.delay} < >"), config.overlay_text_color, start_stop_pos_x, start_stop_pos_y, "font_sorting_overlay")
         self.visualizer_manager.draw_text(display, (f"Length: {self.sorting_visualizer.array_length} /\ \/"), config.overlay_text_color, array_length_pos_x, array_length_pos_y, "font_sorting_overlay")
         self.visualizer_manager.draw_text(display, (f"Array Modes:"), config.overlay_text_color, array_mode_pos_x, array_mode_pos_y, "font_sorting_overlay")
         self.array_mode_selection1 = self.visualizer_manager.draw_text(display, (f"Random"), self.array_modes_colors["random"], array_mode_selection1_x, array_mode_selection1_y, "font_sorting_overlay")

@@ -21,6 +21,7 @@ class Visualizer():
         #self.canvas = pygame.Surface((self.CANVAS_W, self.CANVAS_H))
         self.SCREEN_WIDTH, self.SCREEN_HEIGHT = config.SCREEN_WIDTH, config.SCREEN_HEIGHT
         self.WINDOW = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+        pygame.display.set_caption('Visualizer!')
         self.running, self.playing = True, True
         self.actions = {"space": False, "left_key": False, "right_key": False, "up_key": False, "down_key": False, "left_mouse": False, "shift": False}  # key input checking.
         self.dt, self.prev_time = 0, 0  # delta time
