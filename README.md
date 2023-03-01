@@ -11,6 +11,14 @@ Algorithms Visualizer made in pygame using game states and Strategy Design Patte
 
   
 
+## Demonstration 
+
+
+
+I made a showcase of the project for my CS50 final project. if you want to check what it looks like check it out [here!](https://www.youtube.com/watch?v=zOMSr-9USCw)
+
+
+
 ## Installation
 
   
